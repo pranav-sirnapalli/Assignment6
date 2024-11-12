@@ -1,0 +1,135 @@
+#load a.png and call it 'a'
+load src/res/a.png a
+
+#flip a vertically
+vertical-flip a a_flipVer
+
+#save a-flipVer
+save src/res/img_flipVer.png a_flipVer
+
+#flip the vertically flipped koala horizontally
+horizontal-flip a a_flipHor
+
+#save a-flipHor
+save src/res/a_flipHor.png a_flipHor
+
+#overload 'a' back to a.png
+load src/res/a.png a
+
+#brighten a by adding -100
+brighten a a_dark -100
+
+#save a-dark
+save src/res/img_dark.png a_dark
+
+#brighten a by adding 100
+brighten a a_bright -100
+
+#save a-dark
+save src/res/img_bright.png a_bright
+
+#create a greyscale using only the value component, as an image a-greyscale
+value-component a a_greyScale
+
+#save a-a_greyScale
+save src/res/img_grey.png a_greyScale
+
+#sharpen the image
+sharpen a a_sharpen
+
+#save a-a_sharpen
+save src/res/img_sharpen.png a_sharpen
+
+#blur the image
+blur a a_blur
+
+#save a-a_blur
+save src/res/img_blur.png a_blur
+
+#intensity of image
+intensity-component a a_intensity
+
+#save a-a_intensity
+save src/res/img_intensity.png a_intensity
+
+#sepia of image
+sepia a a_sepia
+
+#save a-a_sepia
+save src/res/img_sepia.png a_sepia
+
+#luma of image
+luma-component a a_luma
+
+#save a-a_luma
+save src/res/img_luma.png a_luma
+
+#split the image in red, green and blue
+rgb-split a a_r a_g a_b
+
+#save split color images
+save src/res/img_split_r.png a_r
+
+save src/res/img_split_g.png a_g
+
+save src/res/img_split_b.png a_b
+
+#combine them back
+rgb-combine a_combine a_r a_g a_b
+
+#save a_combine
+save src/res/img_combine.png a_combine
+
+#red-component
+red-component a a_red_component
+
+#save a-a_greyScale
+save src/res/img_red_component.png a_red_component
+
+#red-component
+red-component a a_red_component
+
+#save a-a_greyScale
+save src/res/img_red_component.png a_red_component
+
+#green-component
+green-component a a_green_component
+
+#save a-a_greyScale
+save src/res/img_green_component.png a_green_component
+
+#blue-component
+blue-component a a_blue_component
+
+#save a-a_greyScale
+save src/res/img_blue_component.png a_blue_component
+
+#Assignment 5 part
+load src/res/a.png a
+sharpen a a_sharpen_split split 50
+save src/res/sharpen_split.png a_sharpen_split
+
+greyScale a a_grey_split split 80
+save src/res/greyScale_split.png a_grey_split
+
+#color correction
+color-correct a a_correct
+save src/res/colorCorrect.png a_correct
+
+#histogram
+histogram a a_histogram
+save src/res/histogram.png a_histogram
+
+#levels-adjust
+levels-adjust 20 100 255 a a_adjusted
+save src/res/adjusted.png a_adjusted
+
+levels-adjust 0 50 255 a a_adjusted2
+save src/res/adjusted2.png a_adjusted2
+
+#compress
+compress 90 a a_compress
+save src/res/compressed_90.png a_compress
+
+compress 80 a a_compress
+save src/res/compressed_80.png a_compress

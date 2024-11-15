@@ -1,5 +1,7 @@
 import controller.ImageController;
 import java.util.Scanner;
+import model.ImageModel;
+import view.ImageView;
 
 /**
  * The entrance of the program.
@@ -12,7 +14,9 @@ public class Main {
    */
   public static void main(String[] args) {
     Scanner scanner = new Scanner(System.in);
-    ImageController controller = new ImageController();
-    controller.run(scanner);
+    ImageModel imageModel = new ImageModel();
+    ImageView imageView = new ImageView();
+    ImageController controller = new ImageController(imageModel, imageView);
+    imageView.setController(controller);
   }
 }

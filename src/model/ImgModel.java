@@ -176,4 +176,13 @@ public interface ImgModel {
    * @return the split image
    */
   Image splitView(Image originImage, Image processedImage, int splitPercentage);
+
+  /**
+   * Create a single color histogram from the image.
+   * @param image the image to produce histogram.
+   * @param type the color of the histogram.
+   * @return a single color histogram of the image.
+   */
+  int[] histogramSeparateColor(Image image, String type);
+
 }

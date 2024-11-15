@@ -1,15 +1,20 @@
 package controller;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import javax.imageio.ImageIO;
 import model.ImageModel;
 import model.ImgModel;
 import model.image.Image;
 import utils.ImageIOHelper;
+import utils.ImageTransformer;
+import view.ImageView;
 
 /**
  * The ImageController class handles user commands for performing various image processing
@@ -20,13 +25,24 @@ import utils.ImageIOHelper;
 public class ImageController {
 
   private ImgModel imageModel;
+  private ImageView imageView;
   private Map<String, Image> images = new HashMap<>();
+
+
+  /**
+   * Empty constructor.
+   */
+  public ImageController() {
+    this.imageModel = new ImageModel();
+  }
+
 
   /**
    * Constructor of ImageController.
    */
-  public ImageController() {
-    this.imageModel = new ImageModel();
+  public ImageController(ImageModel imageModel, ImageView imageView) {
+    this.imageModel = imageModel;
+    this.imageView = imageView;
   }
 
   /**
@@ -227,4 +243,66 @@ public class ImageController {
       System.out.println(e.getMessage());
     }
   }
+
+  public BufferedImage loadImage(String path) {
+    try {
+      Image image = ImageIOHelper.loadImage(path);
+      images.put(path, image);
+      return ImageIO.read(new File(path));
+    }catch (Exception e) {
+      System.out.println(e.getMessage());
+      return null;
+    }
+  }
+
+  public void saveImage(BufferedImage image, String path, String extension) {
+    try {
+      ImageIO.write(image, extension, new File(path));
+    }catch (Exception e) {
+      System.out.println(e.getMessage());
+    }
+  }
+
+  public BufferedImage flipVertical(Image image){
+    return ImageTransformer.transformImageToBufferImage(imageModel.flipVertical(image));
+  }
+
+  public BufferedImage flipHorizontal(Image image){
+    return ImageTransformer.transformImageToBufferImage(imageModel.flipHorizontal(image));
+  }
+
+  public BufferedImage blurImage(Image image){
+    return ImageTransformer.transformImageToBufferImage(imageModel.blur(image));
+  }
+
+  public BufferedImage applySepia(Image image){
+    return ImageTransformer.transformImageToBufferImage(imageModel.sepia(image));
+  }
+
+  public BufferedImage convertToGrayscale(Image image){
+    return ImageTransformer.transformImageToBufferImage(imageModel.toGreyscale(image));
+  }
+
+  public BufferedImage sharpenImage(Image image){
+    return ImageTransformer.transformImageToBufferImage(imageModel.sharpen(image));
+  }
+
+  public BufferedImage compressImage(BufferedImage image, int percentage){
+//    imageModel.compressImage(image, percentage);
+    return null;
+  }
+
+  public int[] getRedHistogram(Image image) {
+    return imageModel.histogramSeparateColor(image,"red");
+  }
+  public int[] getGreenHistogram(Image image){
+    return imageModel.histogramSeparateColor(image,"green");
+
+  }
+  public int[]  getBlueHistogram(Image image){
+    return imageModel.histogramSeparateColor(image,"blue");
+
+  }
+
+
 }

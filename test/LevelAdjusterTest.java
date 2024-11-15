@@ -6,6 +6,7 @@ import model.image.Image;
 import model.image.SimpleImage;
 import org.junit.Test;
 
+
 /**
  * Test for Level-Adjust.
  */

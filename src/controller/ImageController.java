@@ -14,7 +14,7 @@ import model.ImgModel;
 import model.image.Image;
 import utils.ImageIOHelper;
 import utils.ImageTransformer;
-import view.ImageView;
+import view.ImgView;
 
 /**
  * The ImageController class handles user commands for performing various image processing
@@ -25,7 +25,7 @@ import view.ImageView;
 public class ImageController {
 
   private ImgModel imageModel;
-  private ImageView imageView;
+  private ImgView imageView;
   private Map<String, Image> images = new HashMap<>();
 
 
@@ -40,7 +40,7 @@ public class ImageController {
   /**
    * Constructor of ImageController.
    */
-  public ImageController(ImageModel imageModel, ImageView imageView) {
+  public ImageController(ImgModel imageModel, ImgView imageView) {
     this.imageModel = imageModel;
     this.imageView = imageView;
   }
@@ -73,7 +73,7 @@ public class ImageController {
    *
    * @param command The command entered by the user.
    */
-  public void processCommand(String command) {
+  private void processCommand(String command) {
     // Skip empty lines or comments
     if (command.isEmpty() || command.startsWith("#")) {
       return;
@@ -255,12 +255,8 @@ public class ImageController {
     }
   }
 
-  public void saveImage(BufferedImage image, String path, String extension) {
-    try {
-      ImageIO.write(image, extension, new File(path));
-    }catch (Exception e) {
-      System.out.println(e.getMessage());
-    }
+  public void saveImage(Image image, String path) {
+    ImageIOHelper.saveImage(path,image);
   }
 
   public BufferedImage flipVertical(Image image){
@@ -287,10 +283,14 @@ public class ImageController {
     return ImageTransformer.transformImageToBufferImage(imageModel.sharpen(image));
   }
 
-  public BufferedImage compressImage(BufferedImage image, int percentage){
-//    imageModel.compressImage(image, percentage);
-    return null;
+  public BufferedImage compressImage(Image image, int percentage){
+   return ImageTransformer.transformImageToBufferImage(imageModel.compressImage(image, percentage));
   }
+
+  public BufferedImage splitView(Image image, Image processed,int splitRatio){
+    return ImageTransformer.transformImageToBufferImage(imageModel.splitView(image, processed, splitRatio));
+  }
+
 
   public int[] getRedHistogram(Image image) {
     return imageModel.histogramSeparateColor(image,"red");
@@ -304,5 +304,42 @@ public class ImageController {
 
   }
 
+  private Image getCurrentImage(){
+    return null;
+  }
+
+  public void handleImageAction(String action) {
+//      Image currentImage = getCurrentImage();  // Retrieve current image
+//
+//      switch (action) {
+//        case "Blur":
+//          blurImage(currentImage);
+//          break;
+//        case "Sharpen":
+//          applySharpen(currentImage);
+//          break;
+//        case "Sepia":
+//          applySepia(currentImage);
+//          break;
+//        case "Resize":
+//          resizeImage(currentImage);
+//          break;
+//        case "Rotate":
+//          rotateImage(currentImage);
+//          break;
+//        case "Flip":
+//          flipImage(currentImage);
+//          break;
+//        case "Brightness":
+//          adjustBrightness(currentImage);
+//          break;
+//        case "Contrast":
+//          adjustContrast(currentImage);
+//          break;
+//        default:
+//          System.out.println("Action not recognized.");
+//          break;
+//      }
+  }
 
 }

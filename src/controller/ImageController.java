@@ -2,13 +2,12 @@ package controller;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-import javax.imageio.ImageIO;
+import java.util.Stack;
 import model.ImageModel;
 import model.ImgModel;
 import model.image.Image;
@@ -28,6 +27,8 @@ public class ImageController {
   private ImgView imageView;
   private Map<String, Image> images = new HashMap<>();
 
+
+  private Stack<Image> imageStack = new Stack<>();
 
   /**
    * Empty constructor.
@@ -247,64 +248,97 @@ public class ImageController {
   public BufferedImage loadImage(String path) {
     try {
       Image image = ImageIOHelper.loadImage(path);
-      images.put(path, image);
-      return ImageIO.read(new File(path));
-    }catch (Exception e) {
+      imageStack.push(image);
+      return ImageTransformer.transformImageToBufferImage(image);
+    } catch (Exception e) {
       System.out.println(e.getMessage());
       return null;
     }
   }
 
+
   public void saveImage(Image image, String path) {
-    ImageIOHelper.saveImage(path,image);
+    ImageIOHelper.saveImage(path, image);
   }
 
-  public BufferedImage flipVertical(Image image){
-    return ImageTransformer.transformImageToBufferImage(imageModel.flipVertical(image));
+  public BufferedImage flipVertical(Image image) {
+    Image res = imageModel.flipVertical(image);
+    imageStack.push(res);
+    return ImageTransformer.transformImageToBufferImage(res);
   }
 
-  public BufferedImage flipHorizontal(Image image){
-    return ImageTransformer.transformImageToBufferImage(imageModel.flipHorizontal(image));
+  public BufferedImage flipHorizontal(Image image) {
+    Image res = imageModel.flipHorizontal(image);
+    imageStack.push(res);
+    return ImageTransformer.transformImageToBufferImage(res);
   }
 
-  public BufferedImage blurImage(Image image){
-    return ImageTransformer.transformImageToBufferImage(imageModel.blur(image));
+  public BufferedImage blurImage(Image image) {
+    Image res = imageModel.blur(image);
+    imageStack.push(res);
+    return ImageTransformer.transformImageToBufferImage(res);
   }
 
-  public BufferedImage applySepia(Image image){
-    return ImageTransformer.transformImageToBufferImage(imageModel.sepia(image));
+  public BufferedImage applySepia(Image image) {
+    Image res = imageModel.sepia(image);
+    imageStack.push(res);
+    return ImageTransformer.transformImageToBufferImage(res);
   }
 
-  public BufferedImage convertToGrayscale(Image image){
-    return ImageTransformer.transformImageToBufferImage(imageModel.toGreyscale(image));
+  public BufferedImage convertToGrayscale(Image image) {
+    Image res = imageModel.toGreyscale(image);
+    imageStack.push(res);
+    return ImageTransformer.transformImageToBufferImage(res);
   }
 
-  public BufferedImage sharpenImage(Image image){
-    return ImageTransformer.transformImageToBufferImage(imageModel.sharpen(image));
+  public BufferedImage sharpenImage(Image image) {
+    Image res = imageModel.sharpen(image);
+    imageStack.push(res);
+    return ImageTransformer.transformImageToBufferImage(res);
   }
 
-  public BufferedImage compressImage(Image image, int percentage){
-   return ImageTransformer.transformImageToBufferImage(imageModel.compressImage(image, percentage));
+  public BufferedImage compressImage(Image image, int percentage) {
+    Image res = imageModel.compressImage(image, percentage);
+    imageStack.push(res);
+    return ImageTransformer.transformImageToBufferImage(res);
   }
 
-  public BufferedImage splitView(Image image, Image processed,int splitRatio){
-    return ImageTransformer.transformImageToBufferImage(imageModel.splitView(image, processed, splitRatio));
+  public BufferedImage splitView(Image image, Image processed, int splitRatio) {
+    Image origin = imageStack.pop();
+    Image changed = imageStack.peek();
+    imageStack.push(origin);
+    return ImageTransformer.transformImageToBufferImage(
+        imageModel.splitView(origin, changed, splitRatio));
+  }
+
+  public BufferedImage colorCorrection(Image image) {
+    Image res = imageModel.correctColor(image);
+    imageStack.push(res);
+    return ImageTransformer.transformImageToBufferImage(res);
+  }
+
+  public BufferedImage levelAdjustment(Image image, int black, int mid, int white) {
+    Image res = imageModel.adjustLevels(image, black, mid, white);
+    imageStack.push(res);
+    return ImageTransformer.transformImageToBufferImage(res);
   }
 
 
   public int[] getRedHistogram(Image image) {
-    return imageModel.histogramSeparateColor(image,"red");
+    return imageModel.histogramSeparateColor(image, "red");
   }
-  public int[] getGreenHistogram(Image image){
-    return imageModel.histogramSeparateColor(image,"green");
 
-  }
-  public int[]  getBlueHistogram(Image image){
-    return imageModel.histogramSeparateColor(image,"blue");
+  public int[] getGreenHistogram(Image image) {
+    return imageModel.histogramSeparateColor(image, "green");
 
   }
 
-  private Image getCurrentImage(){
+  public int[] getBlueHistogram(Image image) {
+    return imageModel.histogramSeparateColor(image, "blue");
+
+  }
+
+  private Image getCurrentImage() {
     return null;
   }
 

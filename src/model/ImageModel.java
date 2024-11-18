@@ -421,15 +421,24 @@ public class ImageModel implements ImgModel {
 
     // Ensure compression percentage is valid
     if (blThresh < 0 || blThresh > 255) {
-      throw new IllegalArgumentException("bl_thresh must between 0 and 255.");
+      throw new IllegalArgumentException("Black value must between 0 and 255.");
     }
     if (mtPoint < 0 || mtPoint > 255) {
-      throw new IllegalArgumentException("mt_point must between 0 and 255.");
+      throw new IllegalArgumentException("Mid value must between 0 and 255.");
     }
 
     if (whPoint < 0 || whPoint > 255) {
-      throw new IllegalArgumentException("wh_point must between 0 and 255.");
+      throw new IllegalArgumentException("White value must between 0 and 255.");
     }
+
+    if(blThresh>mtPoint) {
+      throw new IllegalArgumentException("Black value should less than mid value and white value.");
+    }
+
+    if(mtPoint>whPoint) {
+      throw new IllegalArgumentException("Mid value should less than white value.");
+    }
+
 
     double scBm = (double) 128 / (mtPoint - blThresh);
     double scMw = (double) (255 - 128) / (whPoint - mtPoint);

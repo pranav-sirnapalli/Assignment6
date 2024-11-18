@@ -62,6 +62,15 @@ The operations performed as well as the files used for it are written below to g
 - HaarTranform file has been added in utilties to perform image compression. The other changes were just additions.
 - to the current assignment 4 folder where we added required code in the controller and model.
 
+## Updates for assignment 6:
+- Added a UI as instructed in assignment question. The code has been written in the view folder.
+- The view folder has the ImgView which is the interface that holds the setController() method which is used to implement the UI.
+- The ImageView class extends the ImgView and is what is used to implement the Image UI using JFrame and Swing.
+- To run the UI click on the file, followed by the run button on the top right in intellij.
+- The design created consists of displaying all the methods in the model as buttons which can be used to modify any image.
+- For example, the load image, flip vertical, color correction button. We also display the histogram and have a file and edit
+- button on the top left corner used to showcase the same functions shown as buttons.
+
 ## Supported Commands:
 - Please check the commands on the other file named USEME.md.
 ## Citation for picture: 

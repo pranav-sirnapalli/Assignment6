@@ -360,11 +360,30 @@ public class ImageModel implements ImgModel {
         BufferedImage.TYPE_INT_RGB);
     Graphics2D graphics = cur_histImage.createGraphics();
 
-    // used to calc histograms for each channel
     int[] rHist = new int[256];
     int[] gHist = new int[256];
     int[] bHist = new int[256];
 
+    // used to calc histograms for each channel
+    storeHistogram(image,rHist,gHist,bHist);
+
+    // Scale histogram values to fit within the 256x256 image
+    scaleHistogram(cur_height,rHist,gHist,bHist);
+
+    drawHistogram(graphics, cur_width, cur_height, rHist, gHist, bHist);
+
+    return ImageTransformer.transformBufferImageToImage(cur_histImage);
+  }
+
+  /**
+   * Helper function for histogram to store the value from Image.
+   *
+   * @param image the target Image to read.
+   * @param rHist red part of histogram.
+   * @param gHist green part of histogram.
+   * @param bHist blue part of histogram.
+   */
+  private void storeHistogram(Image image, int[] rHist, int[] gHist, int[] bHist) {
     for (int x = 0; x < image.getHeight(); x++) {
       for (int y = 0; y < image.getWidth(); y++) {
         int[] color = image.getPixel(x, y);
@@ -373,47 +392,61 @@ public class ImageModel implements ImgModel {
         bHist[color[2]]++;
       }
     }
+  }
 
-    // Scale histogram values to fit within the 256x256 image
+  private void scaleHistogram(int height,int[] rHist, int[] gHist, int[] bHist) {
     int max = 0;
     for (int i = 0; i < 256; i++) {
       max = Math.max(max, Math.max(rHist[i], Math.max(gHist[i], bHist[i])));
     }
     for (int i = 0; i < 256; i++) {
-      rHist[i] = (rHist[i] * cur_height) / max;
-      gHist[i] = (gHist[i] * cur_height) / max;
-      bHist[i] = (bHist[i] * cur_height) / max;
+      rHist[i] = (rHist[i] * height) / max;
+      gHist[i] = (gHist[i] * height) / max;
+      bHist[i] = (bHist[i] * height) / max;
     }
+  }
+
+  /**
+   * Helper function to draw the histogram.
+   *
+   * @param graphics the graphics to draw.
+   * @param width    the width of histogram.
+   * @param height   the height of histogram.
+   * @param rHist    red part of histogram.
+   * @param gHist    green part of histogram.
+   * @param bHist    blue part of histogram.
+   */
+  private void drawHistogram(Graphics2D graphics, int width, int height, int[] rHist, int[] gHist,
+      int[] bHist) {
     graphics.setColor(Color.WHITE);
-    graphics.fillRect(0, 0, cur_width, cur_height);
+    graphics.fillRect(0, 0, width, height);
 
     // Draw horizontal lines for reference
     graphics.setColor(Color.lightGray);
-    for (int i = 0; i <= cur_height; i += 15) {
-      graphics.drawLine(0, cur_height - i, cur_width, cur_height - i);
+    for (int i = 0; i <= height; i += 15) {
+      graphics.drawLine(0, height - i, width, height - i);
     }
 
     // Draw vertical lines for reference
-    for (int i = 0; i < cur_width; i += 15) {
-      graphics.drawLine(i, 0, i, cur_height);
+    for (int i = 0; i < width; i += 15) {
+      graphics.drawLine(i, 0, i, height);
     }
 
     // Draw histograms as line graphs
     graphics.setColor(Color.RED);
     for (int i = 0; i < 255; i++) {
-      graphics.drawLine(i, cur_height - rHist[i], i + 1, cur_height - rHist[i + 1]);
+      graphics.drawLine(i, height - rHist[i], i + 1, height - rHist[i + 1]);
     }
     graphics.setColor(Color.GREEN);
     for (int i = 0; i < 255; i++) {
-      graphics.drawLine(i, cur_height - gHist[i], i + 1, cur_height - gHist[i + 1]);
+      graphics.drawLine(i, height - gHist[i], i + 1, height - gHist[i + 1]);
     }
     graphics.setColor(Color.BLUE);
     for (int i = 0; i < 255; i++) {
-      graphics.drawLine(i, cur_height - bHist[i], i + 1, cur_height - bHist[i + 1]);
+      graphics.drawLine(i, height - bHist[i], i + 1, height - bHist[i + 1]);
     }
 
     graphics.dispose();
-    return ImageTransformer.transformBufferImageToImage(cur_histImage);
   }
 
   @Override
@@ -431,14 +464,13 @@ public class ImageModel implements ImgModel {
       throw new IllegalArgumentException("White value must between 0 and 255.");
     }
 
-    if(blThresh>mtPoint) {
+    if (blThresh > mtPoint) {
       throw new IllegalArgumentException("Black value should less than mid value and white value.");
     }
 
-    if(mtPoint>whPoint) {
+    if (mtPoint > whPoint) {
       throw new IllegalArgumentException("Mid value should less than white value.");
     }
-
 
     double scBm = (double) 128 / (mtPoint - blThresh);
     double scMw = (double) (255 - 128) / (whPoint - mtPoint);

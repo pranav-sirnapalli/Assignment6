@@ -85,6 +85,9 @@ public class ImageView extends JFrame implements ImgView {
     init();
     add(mainpanel, BorderLayout.CENTER);
 
+  }
+
+  public void showGUI(){
     setVisible(true);
   }
 
@@ -98,7 +101,7 @@ public class ImageView extends JFrame implements ImgView {
     creatMenuBar();
   }
 
-  private void creatMenuBar(){
+  private void creatMenuBar() {
     JMenuBar menuBar = new JMenuBar();
 
     //File menu bar

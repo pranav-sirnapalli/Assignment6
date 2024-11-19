@@ -46,12 +46,16 @@ public class ImageController {
     this.imageView = imageView;
   }
 
+  public void runGUI(){
+    imageView.showGUI();
+  }
+
   /**
-   * Run the Controller logic.
+   * Run the program on the CommandLine.
    *
    * @param scanner scanner of run.
    */
-  public void run(Scanner scanner) {
+  public void runCommandLine(Scanner scanner) {
     //System.out.println("Current working directory: " + System.getProperty("user.dir"));
     boolean running = true;
     while (running) {
@@ -232,7 +236,7 @@ public class ImageController {
    *
    * @param scriptPath The file path to the script.
    */
-  private void runScript(String scriptPath) {
+  public void runScript(String scriptPath) {
     try {
       BufferedReader reader = new BufferedReader(new FileReader(scriptPath));
       String line;

@@ -249,82 +249,80 @@ public class ImageController {
     }
   }
 
-  public BufferedImage loadImage(String path) {
+  private void loadImage(String path) {
     try {
       Image image = ImageIOHelper.loadImage(path);
       imageStack.push(image);
-      return ImageTransformer.transformImageToBufferImage(image);
+      imageView.updateImage(ImageTransformer.transformImageToBufferImage(image));
     } catch (Exception e) {
       System.out.println(e.getMessage());
-      return null;
     }
   }
 
 
-  public void saveImage(Image image, String path) {
+  private void saveImage(Image image, String path) {
     ImageIOHelper.saveImage(path, image);
   }
 
-  public BufferedImage flipVertical(Image image) {
+  private void flipVertical(Image image) {
     Image res = imageModel.flipVertical(image);
     imageStack.push(res);
-    return ImageTransformer.transformImageToBufferImage(res);
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
   }
 
-  public BufferedImage flipHorizontal(Image image) {
+  private void flipHorizontal(Image image) {
     Image res = imageModel.flipHorizontal(image);
     imageStack.push(res);
-    return ImageTransformer.transformImageToBufferImage(res);
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
   }
 
-  public BufferedImage blurImage(Image image) {
+  private void blurImage(Image image) {
     Image res = imageModel.blur(image);
     imageStack.push(res);
-    return ImageTransformer.transformImageToBufferImage(res);
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
   }
 
-  public BufferedImage applySepia(Image image) {
+  private void applySepia(Image image) {
     Image res = imageModel.sepia(image);
     imageStack.push(res);
-    return ImageTransformer.transformImageToBufferImage(res);
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
   }
 
-  public BufferedImage convertToGrayscale(Image image) {
+  private void convertToGrayscale(Image image) {
     Image res = imageModel.toGreyscale(image);
     imageStack.push(res);
-    return ImageTransformer.transformImageToBufferImage(res);
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
   }
 
-  public BufferedImage sharpenImage(Image image) {
+  private void sharpenImage(Image image) {
     Image res = imageModel.sharpen(image);
     imageStack.push(res);
-    return ImageTransformer.transformImageToBufferImage(res);
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
   }
 
-  public BufferedImage compressImage(Image image, int percentage) {
+  private void compressImage(Image image, int percentage) {
     Image res = imageModel.compressImage(image, percentage);
     imageStack.push(res);
-    return ImageTransformer.transformImageToBufferImage(res);
   }
 
-  public BufferedImage splitView(Image image, Image processed, int splitRatio) {
+  private void splitView(int splitRatio) {
     Image origin = imageStack.pop();
     Image changed = imageStack.peek();
     imageStack.push(origin);
-    return ImageTransformer.transformImageToBufferImage(
-        imageModel.splitView(origin, changed, splitRatio));
+    Image res = imageModel.splitView(origin, changed, splitRatio);
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
   }
 
-  public BufferedImage colorCorrection(Image image) {
+  private void colorCorrection(Image image) {
     Image res = imageModel.correctColor(image);
     imageStack.push(res);
-    return ImageTransformer.transformImageToBufferImage(res);
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
   }
 
-  public BufferedImage levelAdjustment(Image image, int black, int mid, int white) {
+  private void levelAdjustment(Image image, int black, int mid, int white) {
     Image res = imageModel.adjustLevels(image, black, mid, white);
     imageStack.push(res);
-    return ImageTransformer.transformImageToBufferImage(res);
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
   }
 
 
@@ -343,41 +341,75 @@ public class ImageController {
   }
 
   private Image getCurrentImage() {
-    return null;
+    if(imageStack.empty()) {
+      return null;
+    }
+    return imageStack.peek();
   }
 
-  public void handleImageAction(String action) {
-//      Image currentImage = getCurrentImage();  // Retrieve current image
-//
-//      switch (action) {
-//        case "Blur":
-//          blurImage(currentImage);
-//          break;
-//        case "Sharpen":
-//          applySharpen(currentImage);
-//          break;
-//        case "Sepia":
-//          applySepia(currentImage);
-//          break;
-//        case "Resize":
-//          resizeImage(currentImage);
-//          break;
-//        case "Rotate":
-//          rotateImage(currentImage);
-//          break;
-//        case "Flip":
-//          flipImage(currentImage);
-//          break;
-//        case "Brightness":
-//          adjustBrightness(currentImage);
-//          break;
-//        case "Contrast":
-//          adjustContrast(currentImage);
-//          break;
-//        default:
-//          System.out.println("Action not recognized.");
-//          break;
-//      }
+  public BufferedImage histogram(Image image) {
+    return ImageTransformer.transformImageToBufferImage( imageModel.histogram(image));
+  }
+
+//  public void histogram(Image image) {
+//    BufferedImage res =  ImageTransformer.transformImageToBufferImage( imageModel.histogram(image));
+//    imageView.updateImage(res);
+//  }
+
+  public void handleImageAction(String action,String... parameters) {
+      Image currentImage = getCurrentImage();  // Retrieve current image
+
+      switch (action) {
+        case "Load Image":
+          loadImage(parameters[0]);
+          break;
+        case "Save Image":
+          saveImage(currentImage,parameters[0]);
+          break;
+        case "Compression":
+          compressImage(currentImage,Integer.parseInt(parameters[0]));
+          break;
+        case "Downscale":
+          blurImage(currentImage);
+          break;
+        case "Split-view":
+          // ## Need to change
+          splitView(Integer.parseInt(parameters[0]));
+          break;
+        case "Level Adjustment":
+          int black = Integer.parseInt(parameters[0]);
+          int mid = Integer.parseInt(parameters[1]);
+          int white = Integer.parseInt(parameters[2]);
+          levelAdjustment(currentImage,black,mid,white);
+          break;
+        case "Blur":
+          blurImage(currentImage);
+          break;
+        case "Sharpen":
+          sharpenImage(currentImage);
+          break;
+        case "Sepia":
+          applySepia(currentImage);
+          break;
+        case "Flip Vertical":
+          flipVertical(currentImage);
+          break;
+        case "Flip Horizontal":
+          flipHorizontal(currentImage);
+          break;
+        case "Greyscale":
+          convertToGrayscale(currentImage);
+          break;
+        case "Color Correction":
+          colorCorrection(currentImage);
+          break;
+        case "Histogram":
+          histogram(currentImage);
+          break;
+        default:
+          System.out.println("Action not recognized.");
+          break;
+      }
   }
 
 }

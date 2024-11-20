@@ -607,6 +607,7 @@ public class ImageModel implements ImgModel {
     }
   }
 
+  // ## need to reform check if able to reuse previous code
   public int[] histogramSeparateColor(Image image, String type) {
     if (image == null) {
       throw new IllegalArgumentException("Input image cannot be null");
@@ -622,25 +623,10 @@ public class ImageModel implements ImgModel {
     int[] gHist = new int[256];
     int[] bHist = new int[256];
 
-    for (int x = 0; x < image.getHeight(); x++) {
-      for (int y = 0; y < image.getWidth(); y++) {
-        int[] color = image.getPixel(x, y);
-        rHist[color[0]]++;
-        gHist[color[1]]++;
-        bHist[color[2]]++;
-      }
-    }
+    storeHistogram(image,rHist,gHist,bHist);
 
     // Scale histogram values to fit within the 256x256 image
-    int max = 0;
-    for (int i = 0; i < 256; i++) {
-      max = Math.max(max, Math.max(rHist[i], Math.max(gHist[i], bHist[i])));
-    }
-    for (int i = 0; i < 256; i++) {
-      rHist[i] = (rHist[i] * cur_height) / max;
-      gHist[i] = (gHist[i] * cur_height) / max;
-      bHist[i] = (bHist[i] * cur_height) / max;
-    }
+    scaleHistogram(cur_height,rHist,gHist,bHist);
 
     if (Objects.equals(type, "red")) {
       return rHist;

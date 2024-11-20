@@ -6,9 +6,12 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridLayout;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.HashMap;
 import java.util.InputMismatchException;
+import java.util.Map;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -27,7 +30,6 @@ import utils.ImageTransformer;
 
 public class ImageView extends JFrame implements ImgView {
 
-  private JFrame frame;
   private JPanel mainpanel;
   private JLabel reqimgLabel;
   private JPanel menuPanel;
@@ -36,9 +38,13 @@ public class ImageView extends JFrame implements ImgView {
   private BufferedImage curImage;
   private Image image;
   private ImageController reqController;
+  private Map<String, JButton> actionButtons;
 
 
   public ImageView() {
+
+    actionButtons = new HashMap<>();
+
     setTitle("Image Editor");
     setSize(800, 600);
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -62,10 +68,22 @@ public class ImageView extends JFrame implements ImgView {
       }
 
     };
+
+    histPanel = new JPanel(){
+      @Override
+      protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (curImage != null) {
+          g.drawImage(histogram(), 0, 0, histPanel.getWidth(),histPanel.getHeight(),this);
+        }
+      }
+    };
+
+
     histPanel.setBackground(Color.WHITE);
     TitledBorder titleBorder = new TitledBorder("Histogram");
-    titleBorder.setTitleJustification(TitledBorder.CENTER); // 标题居中
-    titleBorder.setTitlePosition(TitledBorder.TOP); // 标题在顶部
+    titleBorder.setTitleJustification(TitledBorder.CENTER);
+    titleBorder.setTitlePosition(TitledBorder.TOP);
     histPanel.setBorder(titleBorder);
     histPanel.setPreferredSize(new Dimension(265, 265));
 
@@ -75,7 +93,7 @@ public class ImageView extends JFrame implements ImgView {
     mainpanel.addComponentListener(new java.awt.event.ComponentAdapter() {
       public void componentResized(java.awt.event.ComponentEvent evt) {
         if (curImage != null) {
-          updateImage();
+          updateImage(curImage);
         }
       }
     });
@@ -87,7 +105,8 @@ public class ImageView extends JFrame implements ImgView {
 
   }
 
-  public void showGUI(){
+  @Override
+  public void showGUI() {
     setVisible(true);
   }
 
@@ -148,6 +167,30 @@ public class ImageView extends JFrame implements ImgView {
     setJMenuBar(menuBar);
   }
 
+  private void createButton(JPanel buttonPanel) {
+    String[] buttonList = {"Flip Horizontal", "Flip Vertical", "Blur", "Sharpen", "Greyscale",
+        "Sepia", "Color Correction"};
+    for (String name : buttonList) {
+      JButton button = new JButton(name);
+      actionButtons.put(name, button);
+      buttonPanel.add(button);
+    }
+
+    for (String buttonName : actionButtons.keySet()) {
+      JButton button = actionButtons.get(buttonName);
+      button.addActionListener(createButtonListener(buttonName));
+
+    }
+  }
+
+  /**
+   * Helper function for creatButton().
+   * @param action the action name.
+   * @return an actionListener bind with handleImageAction.
+   */
+  private ActionListener createButtonListener(String action) {
+    return e -> reqController.handleImageAction(action);
+  }
 
   private void createButtonPanel() {
     JButton loadButton = new JButton("Load Image");
@@ -156,83 +199,30 @@ public class ImageView extends JFrame implements ImgView {
     JButton saveButton = new JButton("Save Image");
     saveButton.addActionListener(e -> saveImage());
 
-    JButton flipVerticalButton = new JButton("Flip Vertical");
-    flipVerticalButton.addActionListener(e -> {
-      curImage = reqController.flipVertical(image);
-      updateImage();
-
-    });
-
-    JButton flipHorizontalButton = new JButton("Flip Horizontal");
-    flipHorizontalButton.addActionListener(e -> {
-      curImage = reqController.flipHorizontal(image);
-      updateImage();
-    });
-
-    JButton blurButton = new JButton("Blur");
-    blurButton.addActionListener(e -> {
-      curImage = reqController.blurImage(image);
-      updateImage();
-    });
-
-    JButton sharpenButton = new JButton("Sharpen");
-    sharpenButton.addActionListener(e -> {
-      curImage = reqController.sharpenImage(image);
-      updateImage();
-    });
-
-    JButton grayscaleButton = new JButton("Grayscale");
-    grayscaleButton.addActionListener(e -> {
-      curImage = reqController.convertToGrayscale(image);
-      updateImage();
-    });
-
-    JButton sepiaButton = new JButton("Sepia");
-    sepiaButton.addActionListener(e -> {
-      curImage = reqController.applySepia(image);
-      updateImage();
-    });
-
     JButton splitViewButton = new JButton("Split-view");
     splitViewButton.addActionListener(e -> {
       splitView();
-      updateImage();
-    });
-
-    JButton colorCorrectionButton = new JButton("Color Correction");
-    colorCorrectionButton.addActionListener(e -> {
-      curImage = reqController.colorCorrection(image);
-      updateImage();
-
     });
 
     JButton levelAdjustmentButton = new JButton("Level Adjustment");
     levelAdjustmentButton.addActionListener(e -> {
       levelAdjustment();
-      updateImage();
     });
 
     JButton compressionButton = new JButton("Compression");
     compressionButton.addActionListener(e -> {
       compressionImage();
-      updateImage();
     });
 
     JButton downscaleButton = new JButton("Downscale");
     downscaleButton.addActionListener(e -> downscaleImage());
 
     buttonPanel.add(loadButton);
-    buttonPanel.add(flipVerticalButton);
     buttonPanel.add(saveButton);
-    buttonPanel.add(flipHorizontalButton);
-    buttonPanel.add(blurButton);
-    buttonPanel.add(sharpenButton);
-    buttonPanel.add(grayscaleButton);
-    buttonPanel.add(sepiaButton);
+    createButton(buttonPanel);
     buttonPanel.add(downscaleButton);
     buttonPanel.add(compressionButton);
     buttonPanel.add(splitViewButton);
-    buttonPanel.add(colorCorrectionButton);
     buttonPanel.add(levelAdjustmentButton);
   }
 
@@ -241,23 +231,16 @@ public class ImageView extends JFrame implements ImgView {
     int resValue = fileChooser.showOpenDialog(this);
     if (resValue == JFileChooser.APPROVE_OPTION) {
       File file = fileChooser.getSelectedFile();
-      curImage = reqController.loadImage(file.getAbsolutePath());
-      image = ImageTransformer.transformBufferImageToImage(curImage);
-      displayImage(curImage);
+      reqController.handleImageAction("Load Image",file.getAbsolutePath());
       repaint();
     }
   }
 
-  private void updateImage() {
-    image = ImageTransformer.transformBufferImageToImage(curImage);
-    displayImage(curImage);
-  }
-
-  private void nullImageDetected() {
-    if (image == null || curImage == null) {
-      JOptionPane.showMessageDialog(this, "Image can't be null, please load image first. ");
-      return;
-    }
+  @Override
+  public void updateImage(BufferedImage image) {
+    this.curImage = image;
+    this.image = ImageTransformer.transformBufferImageToImage(image);
+    displayImage(image);
   }
 
   private void saveImage() {
@@ -266,7 +249,8 @@ public class ImageView extends JFrame implements ImgView {
     int resValue = fileChooser.showSaveDialog(this);
     if (resValue == JFileChooser.APPROVE_OPTION) {
       File file = fileChooser.getSelectedFile();
-      reqController.saveImage(image, file.getAbsolutePath());
+//      reqController.saveImage(image, file.getAbsolutePath());
+      reqController.handleImageAction("Save Image",file.getAbsolutePath());
       JOptionPane.showMessageDialog(this, "Save Successfully");
     }
   }
@@ -352,19 +336,19 @@ public class ImageView extends JFrame implements ImgView {
         JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
     if (option == JOptionPane.OK_OPTION) {
-      String input1 = textField1.getText();
-      String input2 = textField2.getText();
-      String input3 = textField3.getText();
+      String b = textField1.getText();
+      String m = textField2.getText();
+      String w = textField3.getText();
       try {
-        int black = Integer.parseInt(input1);
-        int mid = Integer.parseInt(input2);
-        int white = Integer.parseInt(input3);
+        int black = Integer.parseInt(b);
+        int mid = Integer.parseInt(m);
+        int white = Integer.parseInt(w);
         if (black < 0 || black > 255 || white < 0 || white > 255 || mid < 0 || mid > 255) {
           throw new NumberFormatException();
         } else if (black > mid || mid > white) {
           throw new InputMismatchException();
         }
-        curImage = reqController.levelAdjustment(image, black, mid, white);
+        reqController.handleImageAction("Level Adjustment",b,m,w);
       } catch (NumberFormatException e) {
         JOptionPane.showMessageDialog(this,
             "Invalid input. Please enter an integer between 0 and 255.", "Error",
@@ -379,6 +363,14 @@ public class ImageView extends JFrame implements ImgView {
     frame.dispose();
   }
 
+  public BufferedImage histogram(){
+    return reqController.histogram(image);
+  }
+
+//  public void histogram(){
+//    reqController.handleImageAction("Histogram");
+//  }
+
   private void splitView() {
     String input = JOptionPane.showInputDialog("Enter the split percentage(1-100)");
     try {
@@ -386,8 +378,9 @@ public class ImageView extends JFrame implements ImgView {
       if (percentage < 1 || percentage > 100) {
         throw new NumberFormatException();
       }
-      BufferedImage splitView = reqController.splitView(image, image, percentage);
-      showImagePopup(splitView);
+      reqController.handleImageAction("Split-view",input);
+      // ## need to decide which way to show the split-view
+      // showImagePopup(splitView);
     } catch (NumberFormatException e) {
       JOptionPane.showMessageDialog(this,
           "Invalid input. Please enter an integer between 1 and 100.", "Error",
@@ -425,7 +418,7 @@ public class ImageView extends JFrame implements ImgView {
       if (percentage < 1 || percentage > 100) {
         throw new NumberFormatException();
       }
-      curImage = reqController.compressImage(image, percentage);
+      reqController.handleImageAction("Compression",input);
     } catch (NumberFormatException e) {
       JOptionPane.showMessageDialog(this,
           "Invalid input. Please enter an integer between 1 and 100.", "Error",
@@ -440,7 +433,7 @@ public class ImageView extends JFrame implements ImgView {
       if (scale < 1 || scale > 100) {
         throw new NumberFormatException();
       }
-      curImage = reqController.compressImage(image, scale);
+      reqController.handleImageAction("Downscale",input);
     } catch (NumberFormatException e) {
       JOptionPane.showMessageDialog(this,
           "Invalid input. Please enter an integer between 1 and 100.", "Error",

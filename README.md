@@ -214,6 +214,8 @@ Creates visual representations of color distributions within an image.
 - Advanced features enhance the application by adding capabilities like visual comparison, storage
 optimization, and analytical insights.
 
+### Downscale[Part of Extra Credit in Assignment6]
+
 ## JAR File Details
 
 The JAR file consolidates all program components into an executable package. It can handle all operations via scripts or direct commands.

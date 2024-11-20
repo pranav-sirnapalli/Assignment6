@@ -72,6 +72,38 @@ blur/sharpen/sepia/greyscale/color-correct/levels-adjust
 - Type the code java -jar assignmet5.jar
 - In the enter command, type the command: run script.txt
 
+
+modified part need to discuss:
+
+
+### Usage
+Use the commands as usual and add `"split <percentage>"` after the command.  
+Example:  
+```txt
+blur <reference_name> <output_name> split 50
+```
+This will blur the image and split the view in half.
+
+## How to Run the Script from the JAR File
+
+1. Move the terminal into the `src/res` directory.
+2. Type one of the following commands:
+   - **Command 1**: `java -jar assignment6.jar`
+   - **Command 2**: `java -jar assignment6.jar -text`
+   - **Command 3**: `java -jar assignment6.jar -file script.txt`
+3. Follow the program instructions to process your images.
+
+## How to Run the Script from Main
+
+1. Open the main file in the IDE.
+2. Click the run option.
+3. Run the script using the terminal:
+   ```bash
+   run src/script.txt
+   ```
+4. Type `exit` to quit the program.
+
+
 ## How to run script from main:
 - Click on main file, followed by run option on top
 - run src/script.txt in terminal

@@ -1,5 +1,7 @@
 package controller;
 
+import java.awt.image.BufferedImage;
+import java.util.Objects;
 import java.util.Stack;
 import model.ImgModel;
 import model.image.Image;
@@ -44,7 +46,7 @@ public class ImageUIController implements ImgUIController {
         compressImage(currentImage, Integer.parseInt(parameters[0]));
         break;
       case "Downscale":
-        blurImage(currentImage);
+        downScaleImage(currentImage,Integer.parseInt(parameters[0]),Integer.parseInt(parameters[1]));
         break;
       case "Split-view":
         // ## Need to change
@@ -77,6 +79,9 @@ public class ImageUIController implements ImgUIController {
       case "Color Correction":
         colorCorrection(currentImage);
         break;
+      case "Component-value":
+        componentValue(currentImage,parameters[0]);
+        break;
       default:
         System.out.println("Action not recognized.");
         break;
@@ -88,7 +93,7 @@ public class ImageUIController implements ImgUIController {
     try {
       Image image = ImageIOHelper.loadImage(path);
       imageStack.push(image);
-      imageView.updateImage(ImageTransformer.transformImageToBufferImage(image));
+      imageView.updateImage(ImageTransformer.transformImageToBufferImage(image),histogram(image));
     } catch (Exception e) {
       System.out.println(e.getMessage());
     }
@@ -102,37 +107,37 @@ public class ImageUIController implements ImgUIController {
   private void flipVertical(Image image) {
     Image res = imageModel.flipVertical(image);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(res));
   }
 
   private void flipHorizontal(Image image) {
     Image res = imageModel.flipHorizontal(image);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(res));
   }
 
   private void blurImage(Image image) {
     Image res = imageModel.blur(image);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(res));
   }
 
   private void applySepia(Image image) {
     Image res = imageModel.sepia(image);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(res));
   }
 
   private void convertToGrayscale(Image image) {
     Image res = imageModel.toGreyscale(image);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(res));
   }
 
   private void sharpenImage(Image image) {
     Image res = imageModel.sharpen(image);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(res));
   }
 
   private void compressImage(Image image, int percentage) {
@@ -145,38 +150,24 @@ public class ImageUIController implements ImgUIController {
     Image changed = imageStack.peek();
     imageStack.push(origin);
     Image res = imageModel.splitView(origin, changed, splitRatio);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(origin));
   }
 
   private void colorCorrection(Image image) {
     Image res = imageModel.correctColor(image);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(res));
   }
 
   private void levelAdjustment(Image image, int black, int mid, int white) {
     Image res = imageModel.adjustLevels(image, black, mid, white);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(res));
   }
 
-  private void histogram(Image image) {
+  private BufferedImage histogram(Image image) {
     Image res = imageModel.histogram(image);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
-  }
-
-  public int[] getRedHistogram(Image image) {
-    return imageModel.histogramSeparateColor(image, "red");
-  }
-
-  public int[] getGreenHistogram(Image image) {
-    return imageModel.histogramSeparateColor(image, "green");
-
-  }
-
-  public int[] getBlueHistogram(Image image) {
-    return imageModel.histogramSeparateColor(image, "blue");
-
+    return ImageTransformer.transformImageToBufferImage(res);
   }
 
   private Image getCurrentImage() {
@@ -185,5 +176,25 @@ public class ImageUIController implements ImgUIController {
     }
     return imageStack.peek();
   }
+
+  private void componentValue(Image image,String color) {
+    Image res = imageModel.splitImage(image);
+    if(Objects.equals(color, "Red")){
+      res = imageModel.redComponent(image);
+    }else if(Objects.equals(color, "Blue")){
+      res = imageModel.blueComponent(image);
+    }else if(Objects.equals(color, "Green")){
+      res = imageModel.greenComponent(image);
+    }
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(res));
+  }
+
+  private void downScaleImage(Image image,int newWidth, int newHeight) {
+    Image res = imageModel.downscale(image, newWidth, newHeight);
+    imageStack.push(res);
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(res));
+  }
+
+
 
 }

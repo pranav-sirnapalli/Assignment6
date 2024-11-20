@@ -1,11 +1,12 @@
 package view;
 
-import controller.ImageController;
+import controller.ImgUIController;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -14,6 +15,8 @@ import java.util.InputMismatchException;
 import java.util.Map;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -37,7 +40,8 @@ public class ImageView extends JFrame implements ImgView {
   private JPanel histPanel;
   private BufferedImage curImage;
   private Image image;
-  private ImageController reqController;
+  private BufferedImage histogram;
+  private ImgUIController reqController;
   private Map<String, JButton> actionButtons;
 
 
@@ -51,6 +55,8 @@ public class ImageView extends JFrame implements ImgView {
 
     mainpanel = new JPanel(new BorderLayout());
     reqimgLabel = new JLabel();
+    reqimgLabel.setHorizontalAlignment(JLabel.CENTER);
+    reqimgLabel.setVerticalAlignment(JLabel.CENTER);
     JScrollPane imageScrollPane = new JScrollPane(reqimgLabel);
 
     menuPanel = new JPanel(new BorderLayout());
@@ -63,22 +69,10 @@ public class ImageView extends JFrame implements ImgView {
       protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         if (curImage != null) {
-          drawHistogram(g, image);
-        }
-      }
-
-    };
-
-    histPanel = new JPanel(){
-      @Override
-      protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        if (curImage != null) {
-          g.drawImage(histogram(), 0, 0, histPanel.getWidth(),histPanel.getHeight(),this);
+          g.drawImage(histogram, 0, 0, histPanel.getWidth(), histPanel.getHeight(), this);
         }
       }
     };
-
 
     histPanel.setBackground(Color.WHITE);
     TitledBorder titleBorder = new TitledBorder("Histogram");
@@ -93,7 +87,7 @@ public class ImageView extends JFrame implements ImgView {
     mainpanel.addComponentListener(new java.awt.event.ComponentAdapter() {
       public void componentResized(java.awt.event.ComponentEvent evt) {
         if (curImage != null) {
-          updateImage(curImage);
+          updateImage(curImage, histogram);
         }
       }
     });
@@ -101,6 +95,7 @@ public class ImageView extends JFrame implements ImgView {
     mainpanel.add(imageScrollPane, BorderLayout.CENTER);
 
     init();
+//    add(mainpanel, BorderLayout.CENTER);
     add(mainpanel, BorderLayout.CENTER);
 
   }
@@ -111,7 +106,7 @@ public class ImageView extends JFrame implements ImgView {
   }
 
   @Override
-  public void setController(ImageController Controller) {
+  public void setController(ImgUIController Controller) {
     this.reqController = Controller;
   }
 
@@ -185,11 +180,42 @@ public class ImageView extends JFrame implements ImgView {
 
   /**
    * Helper function for creatButton().
+   *
    * @param action the action name.
    * @return an actionListener bind with handleImageAction.
    */
   private ActionListener createButtonListener(String action) {
-    return e -> reqController.handleImageAction(action);
+    return e -> {
+      try {
+        if (curImage == null) {
+          throw new NullPointerException();
+        }
+        reqController.handleImageAction(action);
+      } catch (NullPointerException ex) {
+        JOptionPane.showMessageDialog(this,
+            "No Image to process, please load image first.", "Error",
+            JOptionPane.ERROR_MESSAGE);
+      }
+    };
+  }
+
+
+  // Unified exception handling method
+  private void handleButtonAction(Runnable action) {
+    if (curImage == null) {
+      JOptionPane.showMessageDialog(this,
+          "No Image to process, please load image first.", "Error",
+          JOptionPane.ERROR_MESSAGE);
+      return; // Exit early if curImage is null
+    }
+
+    try {
+      action.run(); // Run the passed action
+    } catch (Exception ex) {
+      JOptionPane.showMessageDialog(this,
+          "An unexpected error occurred: " + ex.getMessage(), "Error",
+          JOptionPane.ERROR_MESSAGE);
+    }
   }
 
   private void createButtonPanel() {
@@ -197,25 +223,22 @@ public class ImageView extends JFrame implements ImgView {
     loadButton.addActionListener(e -> loadImage());
 
     JButton saveButton = new JButton("Save Image");
-    saveButton.addActionListener(e -> saveImage());
+    saveButton.addActionListener(e -> handleButtonAction(this::saveImage));
 
     JButton splitViewButton = new JButton("Split-view");
-    splitViewButton.addActionListener(e -> {
-      splitView();
-    });
+    splitViewButton.addActionListener(e -> handleButtonAction(this::splitView));
 
     JButton levelAdjustmentButton = new JButton("Level Adjustment");
-    levelAdjustmentButton.addActionListener(e -> {
-      levelAdjustment();
-    });
+    levelAdjustmentButton.addActionListener(e -> handleButtonAction(this::levelAdjustment));
 
     JButton compressionButton = new JButton("Compression");
-    compressionButton.addActionListener(e -> {
-      compressionImage();
-    });
+    compressionButton.addActionListener(e -> handleButtonAction(this::compressionImage));
 
     JButton downscaleButton = new JButton("Downscale");
-    downscaleButton.addActionListener(e -> downscaleImage());
+    downscaleButton.addActionListener(e -> handleButtonAction(this::downscaleImage));
+
+    JButton componentButton = new JButton("Component-value");
+    componentButton.addActionListener(e -> handleButtonAction(this::componentValue));
 
     buttonPanel.add(loadButton);
     buttonPanel.add(saveButton);
@@ -224,6 +247,7 @@ public class ImageView extends JFrame implements ImgView {
     buttonPanel.add(compressionButton);
     buttonPanel.add(splitViewButton);
     buttonPanel.add(levelAdjustmentButton);
+    buttonPanel.add(componentButton);
   }
 
   private void loadImage() {
@@ -231,13 +255,14 @@ public class ImageView extends JFrame implements ImgView {
     int resValue = fileChooser.showOpenDialog(this);
     if (resValue == JFileChooser.APPROVE_OPTION) {
       File file = fileChooser.getSelectedFile();
-      reqController.handleImageAction("Load Image",file.getAbsolutePath());
+      reqController.handleImageAction("Load Image", file.getAbsolutePath());
       repaint();
     }
   }
 
   @Override
-  public void updateImage(BufferedImage image) {
+  public void updateImage(BufferedImage image, BufferedImage histogram) {
+    this.histogram = histogram;
     this.curImage = image;
     this.image = ImageTransformer.transformBufferImageToImage(image);
     displayImage(image);
@@ -250,9 +275,69 @@ public class ImageView extends JFrame implements ImgView {
     if (resValue == JFileChooser.APPROVE_OPTION) {
       File file = fileChooser.getSelectedFile();
 //      reqController.saveImage(image, file.getAbsolutePath());
-      reqController.handleImageAction("Save Image",file.getAbsolutePath());
+      reqController.handleImageAction("Save Image", file.getAbsolutePath());
       JOptionPane.showMessageDialog(this, "Save Successfully");
     }
+  }
+
+  private void downscaleImage() {
+    // Create the panel to hold input fields
+    JPanel panel = new JPanel();
+    panel.setLayout(new GridLayout(2, 2)); // Two rows, two columns
+
+    // Create the labels and text fields
+    JLabel label1 = new JLabel("Enter scaled width:");
+    JTextField field1 = new JTextField();
+    JLabel label2 = new JLabel("Enter scaled height:");
+    JTextField field2 = new JTextField();
+
+    // Add the labels and text fields to the panel
+    panel.add(label1);
+    panel.add(field1);
+    panel.add(label2);
+    panel.add(field2);
+
+    // Show the dialog with the panel
+    int option = JOptionPane.showConfirmDialog(this, panel, "Input Dialog",
+        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+    // Check if OK was pressed
+    if (option == JOptionPane.OK_OPTION) {
+      String width = field1.getText();
+      String height = field2.getText();
+      reqController.handleImageAction("Downscale", width, height);
+      showImagePopup(curImage, false,"Downscaled Image "+width+"x"+height);
+    }
+  }
+
+
+  private void componentValue() {
+
+    System.out.println("componentValue clicked");
+    // Create the dialog
+    JDialog dialog = new JDialog(this, "Select the component color:", true);
+    dialog.setLayout(new BorderLayout());
+    dialog.setSize(260, 80);
+
+    // Create a dropdown (JComboBox)
+    String[] options = {"Red", "Green", "Blue"};
+    JComboBox<String> comboBox = new JComboBox<>(options);
+    // Add an action listener for the dropdown
+    comboBox.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        String selectedOption = (String) comboBox.getSelectedItem();
+        reqController.handleImageAction("Component-value", selectedOption);
+        dialog.dispose();
+      }
+    });
+
+    // Add the comboBox to the dialog
+    dialog.add(comboBox, BorderLayout.CENTER);
+
+    // Show the dialog
+    dialog.setLocationRelativeTo(this);
+    dialog.setVisible(true);
   }
 
   /**
@@ -295,22 +380,6 @@ public class ImageView extends JFrame implements ImgView {
     }
   }
 
-  private void drawHistogram(Graphics g, Image image) {
-    int[] rHist = reqController.getRedHistogram(image);
-    int[] gHist = reqController.getGreenHistogram(image);
-    int[] bHist = reqController.getBlueHistogram(image);
-
-    for (int i = 0; i < rHist.length; i++) {
-      int x = i + 1 < rHist.length ? i + 1 : i;
-      g.setColor(Color.RED);
-      g.drawLine(i, histPanel.getHeight() - rHist[i], x, histPanel.getHeight() - rHist[x]);
-      g.setColor(Color.GREEN);
-      g.drawLine(i, histPanel.getHeight() - gHist[i], x, histPanel.getHeight() - gHist[x]);
-      g.setColor(Color.BLUE);
-      g.drawLine(i, histPanel.getHeight() - bHist[i], x, histPanel.getHeight() - bHist[x]);
-    }
-  }
-
   private void levelAdjustment() {
     JFrame frame = new JFrame("Level Adjustment Dialog");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -348,7 +417,7 @@ public class ImageView extends JFrame implements ImgView {
         } else if (black > mid || mid > white) {
           throw new InputMismatchException();
         }
-        reqController.handleImageAction("Level Adjustment",b,m,w);
+        reqController.handleImageAction("Level Adjustment", b, m, w);
       } catch (NumberFormatException e) {
         JOptionPane.showMessageDialog(this,
             "Invalid input. Please enter an integer between 0 and 255.", "Error",
@@ -363,22 +432,14 @@ public class ImageView extends JFrame implements ImgView {
     frame.dispose();
   }
 
-  public BufferedImage histogram(){
-    return reqController.histogram(image);
-  }
-
-//  public void histogram(){
-//    reqController.handleImageAction("Histogram");
-//  }
-
   private void splitView() {
-    String input = JOptionPane.showInputDialog("Enter the split percentage(1-100)");
+    String input = JOptionPane.showInputDialog(this, "Enter the split percentage(1-100)");
     try {
       int percentage = Integer.parseInt(input);
       if (percentage < 1 || percentage > 100) {
         throw new NumberFormatException();
       }
-      reqController.handleImageAction("Split-view",input);
+      reqController.handleImageAction("Split-view", input);
       // ## need to decide which way to show the split-view
       // showImagePopup(splitView);
     } catch (NumberFormatException e) {
@@ -388,37 +449,42 @@ public class ImageView extends JFrame implements ImgView {
     }
   }
 
-  private void showImagePopup(BufferedImage image) {
-    JFrame imageWindow = new JFrame("Image Split View");
+  private void showImagePopup(BufferedImage image, Boolean scaledImageEnable,String title) {
+    JFrame imageWindow = new JFrame(title);
     imageWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
     ImageIcon imageIcon = new ImageIcon(image);
-    imageWindow.setSize(imageIcon.getIconWidth(), imageIcon.getIconHeight());
-
-    JLabel imageLabel = new JLabel();
+    int width = Math.max(imageIcon.getIconWidth()+28, 275);
+    int height = Math.max(imageIcon.getIconHeight()+28, 275);
+    imageWindow.setSize(width, height);
+    JLabel imageLabel = new JLabel(imageIcon,JLabel.CENTER);
+    imageLabel.setSize(imageIcon.getIconWidth(), imageIcon.getIconHeight());
 
     imageWindow.add(imageLabel, BorderLayout.CENTER);
 
     imageWindow.setVisible(true);
+    imageWindow.setLocationRelativeTo(this);
     imageWindow.addComponentListener(new java.awt.event.ComponentAdapter() {
       public void componentResized(java.awt.event.ComponentEvent evt) {
-        if (image != null) {
+        if (scaledImageEnable) {
           showImage(image, imageLabel);
         }
+        // If the scaledImageEnable is false the image itself will not scale with window.
       }
     });
-    showImage(image, imageLabel);
+    imageLabel.setIcon(imageIcon);
+//    showImage(image, imageLabel);
 
   }
 
   private void compressionImage() {
-    String input = JOptionPane.showInputDialog("Enter the compression percentage(1-100)");
+    String input = JOptionPane.showInputDialog(this, "Enter the compression percentage(1-100)");
     try {
       int percentage = Integer.parseInt(input);
       if (percentage < 1 || percentage > 100) {
         throw new NumberFormatException();
       }
-      reqController.handleImageAction("Compression",input);
+      reqController.handleImageAction("Compression", input);
     } catch (NumberFormatException e) {
       JOptionPane.showMessageDialog(this,
           "Invalid input. Please enter an integer between 1 and 100.", "Error",
@@ -426,14 +492,17 @@ public class ImageView extends JFrame implements ImgView {
     }
   }
 
-  private void downscaleImage() {
-    String input = JOptionPane.showInputDialog("Enter downscale percentage (1-100):");
+  /**
+   * Helper method to downscale the image.
+   */
+  private void downscaleImage1() {
+    String input = JOptionPane.showInputDialog(this, "Enter downscale percentage (1-100):");
     try {
       int scale = Integer.parseInt(input);
       if (scale < 1 || scale > 100) {
         throw new NumberFormatException();
       }
-      reqController.handleImageAction("Downscale",input);
+      reqController.handleImageAction("Downscale", input);
     } catch (NumberFormatException e) {
       JOptionPane.showMessageDialog(this,
           "Invalid input. Please enter an integer between 1 and 100.", "Error",

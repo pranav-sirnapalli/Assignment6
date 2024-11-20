@@ -3,12 +3,11 @@ package model;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.util.Objects;
+import java.util.Arrays;
 import model.image.Image;
 import model.image.RGBImage;
 import model.image.SimpleImage;
 import utils.ImageTransformer;
-import utils.compression.HaarTransform;
 
 /**
  * ImageModel implemented ImgModel which provides various image manipulation methods such as
@@ -281,6 +280,9 @@ public class ImageModel implements ImgModel {
 
   @Override
   public Image splitView(Image image, Image processedImage, int splitPercentage) {
+    if (splitPercentage<0 || splitPercentage>100) {
+      throw new IllegalArgumentException("Split percentage should be in the range of (0-100)");
+    }
     int splitPoint = (image.getWidth() * splitPercentage) / 100;
     Image result = new SimpleImage(image.getWidth(), image.getHeight());
 
@@ -365,10 +367,10 @@ public class ImageModel implements ImgModel {
     int[] bHist = new int[256];
 
     // used to calc histograms for each channel
-    storeHistogram(image,rHist,gHist,bHist);
+    storeHistogram(image, rHist, gHist, bHist);
 
     // Scale histogram values to fit within the 256x256 image
-    scaleHistogram(cur_height,rHist,gHist,bHist);
+    scaleHistogram(cur_height, rHist, gHist, bHist);
 
     drawHistogram(graphics, cur_width, cur_height, rHist, gHist, bHist);
 
@@ -394,7 +396,7 @@ public class ImageModel implements ImgModel {
     }
   }
 
-  private void scaleHistogram(int height,int[] rHist, int[] gHist, int[] bHist) {
+  private void scaleHistogram(int height, int[] rHist, int[] gHist, int[] bHist) {
     int max = 0;
     for (int i = 0; i < 256; i++) {
       max = Math.max(max, Math.max(rHist[i], Math.max(gHist[i], bHist[i])));
@@ -538,9 +540,9 @@ public class ImageModel implements ImgModel {
     double[][] blueChannel = getChannelData(2, resizedImage);
 
     // Apply Haar Transform and threshold for lossy compression
-    compressedData[0] = HaarTransform.haarWaveTransf2D(redChannel);
-    compressedData[1] = HaarTransform.haarWaveTransf2D(greenChannel);
-    compressedData[2] = HaarTransform.haarWaveTransf2D(blueChannel);
+    compressedData[0] = haarWaveTransf2D(redChannel);
+    compressedData[1] = haarWaveTransf2D(greenChannel);
+    compressedData[2] = haarWaveTransf2D(blueChannel);
 
     // Apply thresholding to the transformed data
     applyThreshold(compressedData[0], percentage);
@@ -566,9 +568,9 @@ public class ImageModel implements ImgModel {
     Image img = new SimpleImage(original.getWidth(), original.getHeight());
 
     // Decompress each color channel using the inverse Haar transform
-    double[][] redChannel = HaarTransform.invHaarWaveTransf2D(compressedData[0]);
-    double[][] greenChannel = HaarTransform.invHaarWaveTransf2D(compressedData[1]);
-    double[][] blueChannel = HaarTransform.invHaarWaveTransf2D(compressedData[2]);
+    double[][] redChannel = invHaarWaveTransf2D(compressedData[0]);
+    double[][] greenChannel = invHaarWaveTransf2D(compressedData[1]);
+    double[][] blueChannel = invHaarWaveTransf2D(compressedData[2]);
 
     // Set pixel values back to original size image
     for (int row = 0; row < original.getHeight(); row++) {
@@ -607,34 +609,147 @@ public class ImageModel implements ImgModel {
     }
   }
 
-  // ## need to reform check if able to reuse previous code
-  public int[] histogramSeparateColor(Image image, String type) {
-    if (image == null) {
-      throw new IllegalArgumentException("Input image cannot be null");
+  /**
+   * method for transformation of double values.
+   *
+   * @param sequence input is a double seq.
+   * @return returns a result.
+   */
+  private double[] haarWaveletTransform(double[] sequence) {
+    int reqlen = sequence.length;
+    double[] netRes = Arrays.copyOf(sequence, reqlen);
+
+    while (reqlen > 1) {
+      double[] avgDiff = new double[reqlen];
+      for (int i = 0; i < reqlen; i += 2) {
+        avgDiff[i / 2] = (netRes[i] + netRes[i + 1]) / Math.sqrt(2);
+        avgDiff[reqlen / 2 + i / 2] = (netRes[i] - netRes[i + 1]) / Math.sqrt(2);
+      }
+      System.arraycopy(avgDiff, 0, netRes, 0, reqlen);
+      reqlen /= 2;
     }
-    int cur_width = 256;
-    int cur_height = 256;
-    BufferedImage cur_histImage = new BufferedImage(cur_width, cur_height,
-        BufferedImage.TYPE_INT_RGB);
-    Graphics2D graphics = cur_histImage.createGraphics();
+    return netRes;
+  }
 
-    // used to calc histograms for each channel
-    int[] rHist = new int[256];
-    int[] gHist = new int[256];
-    int[] bHist = new int[256];
+  /**
+   * method for inverse trnasformation of double values.
+   *
+   * @param transformedSequence input is a double seq.
+   * @return return a result.
+   */
+  private double[] invHaarWaveTransf(double[] transformedSequence) {
+    int length = transformedSequence.length;
+    double[] result = Arrays.copyOf(transformedSequence, length);
+    int m = 2;
 
-    storeHistogram(image,rHist,gHist,bHist);
-
-    // Scale histogram values to fit within the 256x256 image
-    scaleHistogram(cur_height,rHist,gHist,bHist);
-
-    if (Objects.equals(type, "red")) {
-      return rHist;
-    } else if (Objects.equals(type, "green")) {
-      return gHist;
-    } else if (Objects.equals(type, "blue")) {
-      return bHist;
+    while (m <= length) {
+      double[] originalSeq = new double[m];
+      for (int i = 0; i < m / 2; i++) {
+        double avg = result[i];
+        double diff = result[m / 2 + i];
+        originalSeq[2 * i] = (avg + diff) / Math.sqrt(2);
+        originalSeq[2 * i + 1] = (avg - diff) / Math.sqrt(2);
+      }
+      System.arraycopy(originalSeq, 0, result, 0, m);
+      m *= 2;
     }
-    return null;
+    return result;
+  }
+
+  /**
+   * method for haar2D transformation.
+   *
+   * @param resMatrix is the input for the matrix.
+   * @return returns a matrix.
+   */
+  private double[][] haarWaveTransf2D(double[][] resMatrix) {
+    int size = resMatrix.length;
+
+    for (int i = 0; i < size; i++) {
+      resMatrix[i] = haarWaveletTransform(resMatrix[i]);
+    }
+
+    for (int j = 0; j < size; j++) {
+      double[] column = new double[size];
+      for (int i = 0; i < size; i++) {
+        column[i] = resMatrix[i][j];
+      }
+      column = haarWaveletTransform(column);
+      for (int i = 0; i < size; i++) {
+        resMatrix[i][j] = column[i];
+      }
+    }
+
+    return resMatrix;
+  }
+
+  /**
+   * Method for invHaar2d transform.
+   *
+   * @param resMatrix input which is a double matrix.
+   * @return return a result.
+   */
+  private double[][] invHaarWaveTransf2D(double[][] resMatrix) {
+    int size = resMatrix.length;
+
+    for (int j = 0; j < size; j++) {
+      double[] column = new double[size];
+      for (int i = 0; i < size; i++) {
+        column[i] = resMatrix[i][j];
+      }
+      column = invHaarWaveTransf(column);
+      for (int i = 0; i < size; i++) {
+        resMatrix[i][j] = column[i];
+      }
+    }
+
+    for (int i = 0; i < size; i++) {
+      resMatrix[i] = invHaarWaveTransf(resMatrix[i]);
+    }
+
+    return resMatrix;
+  }
+
+  @Override
+  public Image downscale(Image img, int newWidth, int newHeight) {
+    if (img == null) {
+      throw new IllegalArgumentException("Image cannot be null");
+    }
+    if (newWidth <= 0 || newHeight <= 0) {
+      throw new IllegalArgumentException("New dimensions must be greater than zero");
+    }
+
+    Image result = new SimpleImage(newWidth, newHeight);
+    double xRatio = (double) img.getWidth() / newWidth;
+    double yRatio = (double) img.getHeight() / newHeight;
+
+    for (int row = 0; row < newHeight; row++) {
+      for (int col = 0; col < newWidth; col++) {
+        double srcX = col * xRatio;
+        double srcY = row * yRatio;
+
+        int x1 = (int) Math.floor(srcX);
+        int y1 = (int) Math.floor(srcY);
+        int x2 = Math.min(x1 + 1, img.getWidth() - 1);
+        int y2 = Math.min(y1 + 1, img.getHeight() - 1);
+
+        double dx = srcX - x1;
+        double dy = srcY - y1;
+
+        int[] c11 = img.getPixel(y1, x1);
+        int[] c12 = img.getPixel(y2, x1);
+        int[] c21 = img.getPixel(y1, x2);
+        int[] c22 = img.getPixel(y2, x2);
+
+        int[] newPixel = new int[3];
+        for (int i = 0; i < 3; i++) {
+          double c1 = c11[i] * (1 - dy) + c12[i] * dy;
+          double c2 = c21[i] * (1 - dy) + c22[i] * dy;
+          newPixel[i] = (int) (c1 * (1 - dx) + c2 * dx);
+        }
+        result.setPixel(row, col, newPixel);
+      }
+    }
+    return result;
   }
 }

@@ -1,6 +1,7 @@
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import model.ImageModel;
 import model.ImgModel;
@@ -63,5 +64,41 @@ public class SplitViewProcessorTest {
         "Left side should show processed image (black).");
     assertArrayEquals(new int[]{0, 0, 0}, splitImage0.getPixel(75, 50),
         "Right side should show original image (black).");
+  }
+
+  @Test
+  public void testSplitViewWithNegativeSplitPercentages() {
+    Image originalImage = new SimpleImage(100, 100);
+    Image processedImage = new SimpleImage(100, 100);
+    for (int x = 0; x < 100; x++) {
+      for (int y = 0; y < 100; y++) {
+        originalImage.setPixel(x, y, new int[]{0, 0, 0});
+        processedImage.setPixel(x, y, new int[]{255, 255, 255});
+      }
+    }
+    //negative
+    assertThrows(IllegalArgumentException.class,()->{
+      model.splitView(originalImage, processedImage, -1);
+    },"Expected exception for illegal argument");
+
+  }
+
+
+
+  @Test
+  public void testSplitViewWithOver100SplitPercentages() {
+    Image originalImage = new SimpleImage(100, 100);
+    Image processedImage = new SimpleImage(100, 100);
+    for (int x = 0; x < 100; x++) {
+      for (int y = 0; y < 100; y++) {
+        originalImage.setPixel(x, y, new int[]{0, 0, 0});
+        processedImage.setPixel(x, y, new int[]{255, 255, 255});
+      }
+    }
+    //negative
+    assertThrows(IllegalArgumentException.class,()->{
+      model.splitView(originalImage, processedImage, 101);
+    },"Expected exception for illegal argument");
+
   }
 }

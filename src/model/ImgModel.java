@@ -177,12 +177,14 @@ public interface ImgModel {
    */
   Image splitView(Image originImage, Image processedImage, int splitPercentage);
 
-  /**
-   * Create a single color histogram from the image.
-   * @param image the image to produce histogram.
-   * @param type the color of the histogram.
-   * @return a single color histogram of the image.
-   */
-  int[] histogramSeparateColor(Image image, String type);
 
+  /**
+   * Downscale an image to the specified width and height using bilinear interpolation.
+   *
+   * @param img       the original image
+   * @param newWidth  the desired width of the downscaled image
+   * @param newHeight the desired height of the downscaled image
+   * @return the downscaled image
+   */
+  Image downscale(Image img, int newWidth, int newHeight);
 }

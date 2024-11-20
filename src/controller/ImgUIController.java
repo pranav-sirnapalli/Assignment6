@@ -1,6 +1,6 @@
 package controller;
 
-public interface ImgUIController extends ImgController {
+public interface ImgUIController {
 
   void runGUI();
 

@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-import model.ImageModel;
 import model.ImgModel;
 import model.image.Image;
 import utils.ImageIOHelper;
@@ -19,14 +18,15 @@ public class ImageScriptController implements ImgCommandController {
   /**
    * Empty constructor.
    */
-  public ImageScriptController() {
-    this.imageModel = new ImageModel();
+  public ImageScriptController(ImgModel imageModel) {
+    this.imageModel = imageModel;
   }
 
   @Override
-  public void runCommand(Scanner scanner) {
+  public void runCommand(Readable inputSource) {
     //System.out.println("Current working directory: " + System.getProperty("user.dir"));
     boolean running = true;
+    Scanner scanner = new Scanner(inputSource);
     while (running) {
       System.out.print("Enter command: ");
       String command = scanner.nextLine();
@@ -37,6 +37,7 @@ public class ImageScriptController implements ImgCommandController {
       } else {
         this.processCommand(command);
       }
+
     }
 
   }

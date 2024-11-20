@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.Stack;
 import model.ImageModel;
@@ -253,7 +254,7 @@ public class ImageController {
     try {
       Image image = ImageIOHelper.loadImage(path);
       imageStack.push(image);
-      imageView.updateImage(ImageTransformer.transformImageToBufferImage(image));
+      imageView.updateImage(ImageTransformer.transformImageToBufferImage(image),histogram(image));
     } catch (Exception e) {
       System.out.println(e.getMessage());
     }
@@ -267,37 +268,37 @@ public class ImageController {
   private void flipVertical(Image image) {
     Image res = imageModel.flipVertical(image);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(image));
   }
 
   private void flipHorizontal(Image image) {
     Image res = imageModel.flipHorizontal(image);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(image));
   }
 
   private void blurImage(Image image) {
     Image res = imageModel.blur(image);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(image));
   }
 
   private void applySepia(Image image) {
     Image res = imageModel.sepia(image);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(image));
   }
 
   private void convertToGrayscale(Image image) {
     Image res = imageModel.toGreyscale(image);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(image));
   }
 
   private void sharpenImage(Image image) {
     Image res = imageModel.sharpen(image);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(image));
   }
 
   private void compressImage(Image image, int percentage) {
@@ -306,38 +307,26 @@ public class ImageController {
   }
 
   private void splitView(int splitRatio) {
+    if(imageStack.size()==1){
+      return;
+    }
     Image origin = imageStack.pop();
     Image changed = imageStack.peek();
     imageStack.push(origin);
     Image res = imageModel.splitView(origin, changed, splitRatio);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(origin));
   }
 
   private void colorCorrection(Image image) {
     Image res = imageModel.correctColor(image);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(image));
   }
 
   private void levelAdjustment(Image image, int black, int mid, int white) {
     Image res = imageModel.adjustLevels(image, black, mid, white);
     imageStack.push(res);
-    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res));
-  }
-
-
-  public int[] getRedHistogram(Image image) {
-    return imageModel.histogramSeparateColor(image, "red");
-  }
-
-  public int[] getGreenHistogram(Image image) {
-    return imageModel.histogramSeparateColor(image, "green");
-
-  }
-
-  public int[] getBlueHistogram(Image image) {
-    return imageModel.histogramSeparateColor(image, "blue");
-
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(image));
   }
 
   private Image getCurrentImage() {
@@ -347,14 +336,21 @@ public class ImageController {
     return imageStack.peek();
   }
 
-  public BufferedImage histogram(Image image) {
+  private BufferedImage histogram(Image image) {
     return ImageTransformer.transformImageToBufferImage( imageModel.histogram(image));
   }
 
-//  public void histogram(Image image) {
-//    BufferedImage res =  ImageTransformer.transformImageToBufferImage( imageModel.histogram(image));
-//    imageView.updateImage(res);
-//  }
+  private void componentValue(Image image,String color) {
+    Image res = imageModel.splitImage(image);
+    if(Objects.equals(color, "Red")){
+      res = imageModel.redComponent(image);
+    }else if(Objects.equals(color, "Blue")){
+      res = imageModel.blueComponent(image);
+    }else if(Objects.equals(color, "Green")){
+      res = imageModel.greenComponent(image);
+    }
+    imageView.updateImage(ImageTransformer.transformImageToBufferImage(res),histogram(res));
+  }
 
   public void handleImageAction(String action,String... parameters) {
       Image currentImage = getCurrentImage();  // Retrieve current image
@@ -405,6 +401,9 @@ public class ImageController {
           break;
         case "Histogram":
           histogram(currentImage);
+          break;
+        case "Component-value":
+          componentValue(currentImage,parameters[0]);
           break;
         default:
           System.out.println("Action not recognized.");

@@ -75,3 +75,156 @@ The operations performed as well as the files used for it are written below to g
 - Please check the commands on the other file named USEME.md.
 ## Citation for picture: 
 - This picture is draw by my friend, her name(Xueer Wang) is also on the picture.
+
+
+# IME: Image Manipulation and Enhancement
+
+## Project Components
+
+- **ImageName**: a.png
+- **Script**: script.txt
+- **JAR File**: Assignment6.jar
+- **JAR Script**: script2.txt
+
+## Overview
+
+This project provides a comprehensive image manipulation and enhancement tool that allows users to
+perform operations like flipping, channel visualization, brightening, blurring, sharpening, color
+correction, and more. It supports image formats including JPEG, PNG, and PPM, offering flexibility
+for various use cases.
+
+Using a robust **Model-View-Controller (MVC)** architecture, the project ensures modularity, allowing
+future enhancements and maintenance with ease. It features a scripting interface for batch
+operations, streamlining image processing tasks.
+
+## Key Features
+
+- **Image Operations**: Flip, brighten, compress, and apply filters like blur, sharpen, sepia, and greyscale.
+- **Histogram Generation**: Analyze image color distribution.
+- **Split View Operations**: Compare original and processed images side by side.
+- **Multi-format Support**: Works seamlessly with JPEG, PNG, and PPM formats.
+- **Command-Line Interface**: Enables efficient processing via scripts.
+
+## Project Structure
+
+### 1. **Model**: Core Logic
+The model layer forms the foundation of the application by managing the internal representation of images
+and providing methods to manipulate them.
+
+- **Image Class**: Represents an image as a grid of RGB pixels.
+- **Pixel Class**: Manages individual pixel RGB values.
+- **ImageProcessor Interface**: Defines methods for image operations.
+- **ImageProcessorImpl**: Implements core image manipulation logic.
+
+- The model layer is responsible for handling the representation and core transformations of images,
+such as flipping, brightening, and applying filters. It forms the backbone of the application.
+
+### 2. **Controller**: Interaction Management
+The controller acts as the intermediary between the user and the model. It processes user commands
+and coordinates the execution of operations.
+
+- **ImageController**: Handles commands for loading, saving, and manipulating images.
+- **Script Execution**: Processes batch scripts with commands for automated operations.
+
+- This layer translates user input into actions. By processing scripts or direct commands, it enables
+the seamless application of image manipulations.
+
+### 3. **View**: User Interaction (GUI)
+The view layer provides the graphical user interface (GUI) for the application, making it accessible to users of all
+technical levels. It ensures a user-friendly interaction experience, including visual feedback for
+commands and immediate results display.
+
+- **TextView**: Console-based display of messages and errors.
+
+- The GUI extends the application's functionality by providing a visual representation of images and
+operations. Users can interact with the application using buttons, menus, and sliders, simplifying the
+workflow for non-technical users. The GUI also includes support for previewing before saving results,
+allowing for adjustments and edits to be made dynamically.
+
+
+### 4. **Utility**: File I/O
+The utility layer handles reading and writing image files in multiple formats, ensuring compatibility and
+reliability.
+
+- **ImageUtil**: Reads and writes images in multiple formats.
+- **PPMHandler**: Handles PPM-specific operations.
+- **OtherFormatHandler**: Manages JPEG and PNG formats.
+
+- This layer ensures smooth I/O operations, allowing images to be seamlessly read from and written to
+various file formats.
+
+## Example Commands
+
+Scripts consist of commands to load, manipulate, and save images. Supported commands include:
+
+```txt
+load <image-path> <image-name>
+save <image-path> <image-name>
+blur <image-name> <dest-image-name>
+sharpen <image-name> <dest-image-name>
+greyscale <image-name> <dest-image-name>
+sepia <image-name> <dest-image-name>
+compress <compression-ratio> <image-name> <dest-image-name>
+histogram <image-name> <dest-image-name>
+exit
+```
+
+### Sample Script
+```txt
+load res/a.png img1
+blur img1 img1-blurred
+save res/img1-blurred.png img1-blurred
+exit
+```
+
+- Commands provide a powerful way to automate image manipulation. They allow for precise control over
+operations, whether executed individually or as part of a script.
+
+## Running the Application
+
+### Executing the JAR File
+Run the JAR file from the command line:
+```bash
+java -jar res/Assignment6.jar
+```
+
+### Running Scripts
+Use the `run` command to execute scripts:
+```bash
+run res/script.txt
+```
+
+### Output
+Processed images and results are saved in the `res/` directory.
+
+- The application can be run either interactively or using predefined scripts. Outputs are saved in
+organized folders for easy access.
+
+## Advanced Features
+
+### Split View Comparison
+Allows users to visually compare the original image with its processed version (e.g., blur, sharpen, etc.) side by side.
+
+### Compression
+Enables quality reduction to specified levels (e.g., 80%, 90%), optimizing storage without significant quality loss.
+
+### Histogram Generation
+Creates visual representations of color distributions within an image.
+
+- Advanced features enhance the application by adding capabilities like visual comparison, storage
+optimization, and analytical insights.
+
+## JAR File Details
+
+The JAR file consolidates all program components into an executable package. It can handle all operations via scripts or direct commands.
+
+- The JAR file simplifies application distribution and execution, bundling all necessary components into a single, portable file.
+
+## Example Use Cases
+
+1. **Batch Processing**: Automate tasks using scripts (e.g., `script.txt`, `script2.txt`).
+2. **Histogram Analysis**: Generate histograms for visual insights into image color distribution.
+3. **Format Conversion**: Process and save images in different formats.
+
+- The application excels in automating repetitive tasks, analyzing image data, and converting image formats efficiently.
+

@@ -3,11 +3,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import controller.ImageController;
+import controller.ImageScriptController;
+import controller.ImgCommandController;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
-import java.util.Scanner;
+import java.io.StringReader;
+import model.ImageModel;
 import model.image.Image;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,12 +20,12 @@ import utils.ImageIOHelper;
  */
 public class ImageControllerTest {
 
-  private ImageController controller;
+  private ImgCommandController controller;
   private ByteArrayOutputStream outputStream;
 
   @Before
   public void setUp() {
-    controller = new ImageController();
+    controller = new ImageScriptController(new ImageModel());
     outputStream = new ByteArrayOutputStream();
     System.setOut(new PrintStream(outputStream));
   }
@@ -45,8 +47,18 @@ public class ImageControllerTest {
 
   @Test
   public void testInvalidCase() {
-    Scanner scanner = new Scanner("invalid a a exit");
-    //controller.processCommand(scanner.nextLine());
+
+    String input = "invalid command\nexit\n";
+
+    // Use StringReader to simulate the input stream
+    StringReader stringReader = new StringReader(input);
+
+    // Capture the output of the system
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    PrintStream printStream = new PrintStream(outputStream);
+    System.setOut(printStream);
+
+    controller.runCommand(stringReader);
 
     String output = outputStream.toString();
     assertTrue("Output should be 'Invalid command!'", output.contains("Invalid command!"));
@@ -55,8 +67,16 @@ public class ImageControllerTest {
 
   @Test
   public void testMissingParam() {
-    Scanner scanner = new Scanner("load pathWithoutSecondParam");
-    //controller.processCommand(scanner.nextLine());
+    String input = "load pathWithoutSecondParam\nexit\n";
+
+    // Use StringReader to simulate the input stream
+    StringReader stringReader = new StringReader(input);
+
+    // Capture the output of the system
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    PrintStream printStream = new PrintStream(outputStream);
+    System.setOut(printStream);
+    controller.runCommand(stringReader);
 
     String output = outputStream.toString();
     assertTrue("Output should give a prompt related to load'",

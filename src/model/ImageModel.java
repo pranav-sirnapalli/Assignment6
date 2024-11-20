@@ -195,20 +195,14 @@ public class ImageModel implements ImgModel {
 
   @Override
   public Image luma(Image img) {
-    return sepiaOrLuma(img, new double[][]{
-        {0.299, 0.587, 0.114},
-        {0.299, 0.587, 0.114},
-        {0.299, 0.587, 0.114}
-    });
+    return sepiaOrLuma(img,
+        new double[][]{{0.299, 0.587, 0.114}, {0.299, 0.587, 0.114}, {0.299, 0.587, 0.114}});
   }
 
   @Override
   public Image sepia(Image img) {
-    return sepiaOrLuma(img, new double[][]{
-        {0.393, 0.769, 0.189},
-        {0.349, 0.686, 0.168},
-        {0.272, 0.534, 0.131}
-    });
+    return sepiaOrLuma(img,
+        new double[][]{{0.393, 0.769, 0.189}, {0.349, 0.686, 0.168}, {0.272, 0.534, 0.131}});
   }
 
   @Override
@@ -280,7 +274,7 @@ public class ImageModel implements ImgModel {
 
   @Override
   public Image splitView(Image image, Image processedImage, int splitPercentage) {
-    if (splitPercentage<0 || splitPercentage>100) {
+    if (splitPercentage < 0 || splitPercentage > 100) {
       throw new IllegalArgumentException("Split percentage should be in the range of (0-100)");
     }
     int splitPoint = (image.getWidth() * splitPercentage) / 100;

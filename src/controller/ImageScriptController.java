@@ -10,6 +10,12 @@ import model.ImgModel;
 import model.image.Image;
 import utils.ImageIOHelper;
 
+/**
+ * The ImageScriptController class handles user commands for performing various image processing
+ * operations. It interacts with the ImageModel to load, save, and apply transformations to images.
+ * It supports both interactive commands and the execution of a script containing multiple
+ * commands.
+ */
 public class ImageScriptController implements ImgCommandController {
 
   private ImgModel imageModel;

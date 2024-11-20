@@ -28,9 +28,19 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
-import model.image.Image;
-import utils.ImageTransformer;
 
+
+/**
+ * The ImageView class represents the graphical user interface (GUI) for the image editor
+ * application. It provides various components and actions for displaying, manipulating, and saving
+ * images. Users can perform actions such as loading images, editing their properties, applying
+ * image processing techniques, and visualizing results (e.g., histograms). This class is built on
+ * Swing and implements the ImgView interface to allow communication with the controller. The
+ * ImageView interacts with the ImgUIController to handle user commands and image operations. It
+ * uses multiple panels and buttons for different functions, including image loading, editing,
+ * splitting, compression, and more. The GUI components include buttons, menu bars, labels, and
+ * input dialogs to facilitate a wide range of image editing capabilities.
+ */
 public class ImageView extends JFrame implements ImgView {
 
   private JPanel mainpanel;
@@ -39,12 +49,14 @@ public class ImageView extends JFrame implements ImgView {
   private JPanel buttonPanel;
   private JPanel histPanel;
   private BufferedImage curImage;
-  private Image image;
   private BufferedImage histogram;
   private ImgUIController reqController;
   private Map<String, JButton> actionButtons;
 
 
+  /**
+   * Constructor of the Imageview.
+   */
   public ImageView() {
 
     actionButtons = new HashMap<>();
@@ -62,8 +74,42 @@ public class ImageView extends JFrame implements ImgView {
     menuPanel = new JPanel(new BorderLayout());
     buttonPanel = new JPanel(new GridLayout(9, 2));
 
+    init();
     menuPanel.add(buttonPanel, BorderLayout.NORTH);
+    menuPanel.add(histPanel, BorderLayout.SOUTH);
+    mainpanel.add(menuPanel, BorderLayout.EAST);
 
+    mainpanel.addComponentListener(new java.awt.event.ComponentAdapter() {
+      public void componentResized(java.awt.event.ComponentEvent evt) {
+        if (curImage != null) {
+          updateImage(curImage, histogram);
+        }
+      }
+    });
+
+    mainpanel.add(imageScrollPane, BorderLayout.CENTER);
+
+    add(mainpanel, BorderLayout.CENTER);
+
+  }
+
+  @Override
+  public void showGUI() {
+    setVisible(true);
+  }
+
+  @Override
+  public void setController(ImgUIController Controller) {
+    this.reqController = Controller;
+  }
+
+  private void init() {
+    createHistogramPanel();
+    createButtonPanel();
+    creatMenuBar();
+  }
+
+  private void createHistogramPanel() {
     histPanel = new JPanel() {
       @Override
       protected void paintComponent(Graphics g) {
@@ -80,40 +126,8 @@ public class ImageView extends JFrame implements ImgView {
     titleBorder.setTitlePosition(TitledBorder.TOP);
     histPanel.setBorder(titleBorder);
     histPanel.setPreferredSize(new Dimension(265, 265));
-
-    menuPanel.add(histPanel, BorderLayout.SOUTH);
-    mainpanel.add(menuPanel, BorderLayout.EAST);
-
-    mainpanel.addComponentListener(new java.awt.event.ComponentAdapter() {
-      public void componentResized(java.awt.event.ComponentEvent evt) {
-        if (curImage != null) {
-          updateImage(curImage, histogram);
-        }
-      }
-    });
-
-    mainpanel.add(imageScrollPane, BorderLayout.CENTER);
-
-    init();
-//    add(mainpanel, BorderLayout.CENTER);
-    add(mainpanel, BorderLayout.CENTER);
-
   }
 
-  @Override
-  public void showGUI() {
-    setVisible(true);
-  }
-
-  @Override
-  public void setController(ImgUIController Controller) {
-    this.reqController = Controller;
-  }
-
-  private void init() {
-    createButtonPanel();
-    creatMenuBar();
-  }
 
   private void creatMenuBar() {
     JMenuBar menuBar = new JMenuBar();
@@ -129,33 +143,19 @@ public class ImageView extends JFrame implements ImgView {
 
     //Edit menu bar
     JMenu menuEdit = new JMenu("Edit");
-    JMenuItem flipHor = new JMenuItem("Flip Horizontal");
-    JMenuItem flipVer = new JMenuItem("Flip Vertical");
-    JMenuItem blur = new JMenuItem("Blur");
-    JMenuItem sharpen = new JMenuItem("Sharpen");
-    JMenuItem greyscale = new JMenuItem("Greyscale");
-    JMenuItem sepia = new JMenuItem("Sepia");
-    JMenuItem downscale = new JMenuItem("Downscale");
-    JMenuItem compression = new JMenuItem("Compression");
-
     JMenu component = new JMenu("Component-value");
     JMenuItem red = new JMenuItem("red");
     JMenuItem green = new JMenuItem("green");
     JMenuItem blue = new JMenuItem("blue");
 
+    red.addActionListener(e -> reqController.handleImageAction("Component-value", "Red"));
+    green.addActionListener(e -> reqController.handleImageAction("Component-value", "Green"));
+    blue.addActionListener(e -> reqController.handleImageAction("Component-value", "Blue"));
+
     component.add(red);
     component.add(green);
     component.add(blue);
-
-    menuEdit.add(flipHor);
-    menuEdit.add(flipVer);
-    menuEdit.add(blur);
-    menuEdit.add(sharpen);
-    menuEdit.add(greyscale);
-    menuEdit.add(sepia);
-    menuEdit.add(compression);
     menuEdit.add(component);
-    menuEdit.add(downscale);
 
     menuBar.add(menuFile);
     menuBar.add(menuEdit);
@@ -192,29 +192,24 @@ public class ImageView extends JFrame implements ImgView {
         }
         reqController.handleImageAction(action);
       } catch (NullPointerException ex) {
-        JOptionPane.showMessageDialog(this,
-            "No Image to process, please load image first.", "Error",
-            JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this, "No Image to process, please load image first.",
+            "Error", JOptionPane.ERROR_MESSAGE);
       }
     };
   }
 
-
-  // Unified exception handling method
   private void handleButtonAction(Runnable action) {
     if (curImage == null) {
-      JOptionPane.showMessageDialog(this,
-          "No Image to process, please load image first.", "Error",
+      JOptionPane.showMessageDialog(this, "No Image to process, please load image first.", "Error",
           JOptionPane.ERROR_MESSAGE);
-      return; // Exit early if curImage is null
+      return;
     }
 
     try {
-      action.run(); // Run the passed action
+      action.run();
     } catch (Exception ex) {
-      JOptionPane.showMessageDialog(this,
-          "An unexpected error occurred: " + ex.getMessage(), "Error",
-          JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, "An unexpected error occurred: " + ex.getMessage(),
+          "Error", JOptionPane.ERROR_MESSAGE);
     }
   }
 
@@ -264,7 +259,6 @@ public class ImageView extends JFrame implements ImgView {
   public void updateImage(BufferedImage image, BufferedImage histogram) {
     this.histogram = histogram;
     this.curImage = image;
-    this.image = ImageTransformer.transformBufferImageToImage(image);
     displayImage(image);
   }
 
@@ -274,39 +268,33 @@ public class ImageView extends JFrame implements ImgView {
     int resValue = fileChooser.showSaveDialog(this);
     if (resValue == JFileChooser.APPROVE_OPTION) {
       File file = fileChooser.getSelectedFile();
-//      reqController.saveImage(image, file.getAbsolutePath());
       reqController.handleImageAction("Save Image", file.getAbsolutePath());
       JOptionPane.showMessageDialog(this, "Save Successfully");
     }
   }
 
   private void downscaleImage() {
-    // Create the panel to hold input fields
     JPanel panel = new JPanel();
-    panel.setLayout(new GridLayout(2, 2)); // Two rows, two columns
+    panel.setLayout(new GridLayout(2, 2));
 
-    // Create the labels and text fields
     JLabel label1 = new JLabel("Enter scaled width:");
     JTextField field1 = new JTextField();
     JLabel label2 = new JLabel("Enter scaled height:");
     JTextField field2 = new JTextField();
 
-    // Add the labels and text fields to the panel
     panel.add(label1);
     panel.add(field1);
     panel.add(label2);
     panel.add(field2);
 
-    // Show the dialog with the panel
     int option = JOptionPane.showConfirmDialog(this, panel, "Input Dialog",
         JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-    // Check if OK was pressed
     if (option == JOptionPane.OK_OPTION) {
       String width = field1.getText();
       String height = field2.getText();
       reqController.handleImageAction("Downscale", width, height);
-      showImagePopup(curImage, false,"Downscaled Image "+width+"x"+height);
+      showImagePopup(curImage, false, "Downscaled Image " + width + "x" + height);
     }
   }
 
@@ -314,15 +302,14 @@ public class ImageView extends JFrame implements ImgView {
   private void componentValue() {
 
     System.out.println("componentValue clicked");
-    // Create the dialog
+
     JDialog dialog = new JDialog(this, "Select the component color:", true);
     dialog.setLayout(new BorderLayout());
     dialog.setSize(260, 80);
 
-    // Create a dropdown (JComboBox)
     String[] options = {"Red", "Green", "Blue"};
     JComboBox<String> comboBox = new JComboBox<>(options);
-    // Add an action listener for the dropdown
+
     comboBox.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -332,10 +319,8 @@ public class ImageView extends JFrame implements ImgView {
       }
     });
 
-    // Add the comboBox to the dialog
     dialog.add(comboBox, BorderLayout.CENTER);
 
-    // Show the dialog
     dialog.setLocationRelativeTo(this);
     dialog.setVisible(true);
   }
@@ -449,15 +434,15 @@ public class ImageView extends JFrame implements ImgView {
     }
   }
 
-  private void showImagePopup(BufferedImage image, Boolean scaledImageEnable,String title) {
+  private void showImagePopup(BufferedImage image, Boolean scaledImageEnable, String title) {
     JFrame imageWindow = new JFrame(title);
     imageWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
     ImageIcon imageIcon = new ImageIcon(image);
-    int width = Math.max(imageIcon.getIconWidth()+28, 275);
-    int height = Math.max(imageIcon.getIconHeight()+28, 275);
+    int width = Math.max(imageIcon.getIconWidth() + 28, 275);
+    int height = Math.max(imageIcon.getIconHeight() + 28, 275);
     imageWindow.setSize(width, height);
-    JLabel imageLabel = new JLabel(imageIcon,JLabel.CENTER);
+    JLabel imageLabel = new JLabel(imageIcon, JLabel.CENTER);
     imageLabel.setSize(imageIcon.getIconWidth(), imageIcon.getIconHeight());
 
     imageWindow.add(imageLabel, BorderLayout.CENTER);
@@ -473,7 +458,6 @@ public class ImageView extends JFrame implements ImgView {
       }
     });
     imageLabel.setIcon(imageIcon);
-//    showImage(image, imageLabel);
 
   }
 

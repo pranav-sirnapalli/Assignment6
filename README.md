@@ -215,6 +215,9 @@ Creates visual representations of color distributions within an image.
 optimization, and analytical insights.
 
 ### Downscale[Part of Extra Credit in Assignment6]
+Allow user to resize the width and height of the image in a way to shrink the picture size.
+
+What we changed for the 
 
 ## JAR File Details
 

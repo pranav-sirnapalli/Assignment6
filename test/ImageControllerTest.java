@@ -21,12 +21,11 @@ import utils.ImageIOHelper;
 public class ImageControllerTest {
 
   private ImgCommandController controller;
-  private ByteArrayOutputStream outputStream;
 
   @Before
   public void setUp() {
     controller = new ImageScriptController(new ImageModel());
-    outputStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     System.setOut(new PrintStream(outputStream));
   }
 

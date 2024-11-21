@@ -3,6 +3,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import model.image.Image;
 import model.ImageModel;
+import model.image.RGBImage;
 import model.image.SimpleImage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,26 @@ public class ImageModelTest {
     assertArrayEquals(new int[]{50, 50, 255}, brightened.getPixel(1, 0));
     assertArrayEquals(new int[]{255, 255, 50}, brightened.getPixel(1, 1));
   }
+
+  @Test
+  public void testDarken() {
+    Image brightened = imageModel.brighten(testImage, -50);
+    assertArrayEquals(new int[]{205, 0, 0}, brightened.getPixel(0, 0));
+    assertArrayEquals(new int[]{0, 205, 0}, brightened.getPixel(0, 1));
+    assertArrayEquals(new int[]{0, 0, 205}, brightened.getPixel(1, 0));
+    assertArrayEquals(new int[]{205, 205, 0}, brightened.getPixel(1, 1));
+  }
+
+  @Test
+  public void testMultipleAction() {
+    Image brightened = imageModel.brighten(testImage, 50);
+    Image darkened = imageModel.brighten(brightened, -50);
+    assertArrayEquals(new int[]{205, 0, 0}, darkened.getPixel(0, 0));
+    assertArrayEquals(new int[]{0, 205, 0}, darkened.getPixel(0, 1));
+    assertArrayEquals(new int[]{0, 0, 205}, darkened.getPixel(1, 0));
+    assertArrayEquals(new int[]{205, 205, 0}, darkened.getPixel(1, 1));
+  }
+
 
   @Test
   public void testToGreyscale() {
@@ -119,6 +140,16 @@ public class ImageModelTest {
   }
 
   @Test
+  public void testCombine() {
+    RGBImage image = imageModel.splitImage(testImage);
+    Image combined = imageModel.combineImage(image.redComponent(image),image.greenComponent(image),image.blueComponent(image));
+    assertArrayEquals(new int[]{255, 0, 0}, combined.getPixel(0, 0));
+    assertArrayEquals(new int[]{0, 255, 0}, combined.getPixel(0, 1));
+    assertArrayEquals(new int[]{0, 0, 255}, combined.getPixel(1, 0));
+    assertArrayEquals(new int[]{255, 255, 0}, combined.getPixel(1, 1));
+  }
+
+  @Test
   public void testValueComponent() {
     Image valueComponent = imageModel.value(testImage);
     assertArrayEquals(new int[]{255, 255, 255}, valueComponent.getPixel(0, 0));
@@ -126,6 +157,7 @@ public class ImageModelTest {
     assertArrayEquals(new int[]{255, 255, 255}, valueComponent.getPixel(1, 0));
     assertArrayEquals(new int[]{255, 255, 255}, valueComponent.getPixel(1, 1));
   }
+
 
 
   @Test

@@ -43,9 +43,7 @@ import javax.swing.border.TitledBorder;
  */
 public class ImageView extends JFrame implements ImgView {
 
-  private JPanel mainpanel;
   private JLabel reqimgLabel;
-  private JPanel menuPanel;
   private JPanel buttonPanel;
   private JPanel histPanel;
   private BufferedImage curImage;
@@ -65,13 +63,13 @@ public class ImageView extends JFrame implements ImgView {
     setSize(800, 600);
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-    mainpanel = new JPanel(new BorderLayout());
+    JPanel mainpanel = new JPanel(new BorderLayout());
     reqimgLabel = new JLabel();
     reqimgLabel.setHorizontalAlignment(JLabel.CENTER);
     reqimgLabel.setVerticalAlignment(JLabel.CENTER);
     JScrollPane imageScrollPane = new JScrollPane(reqimgLabel);
 
-    menuPanel = new JPanel(new BorderLayout());
+    JPanel menuPanel = new JPanel(new BorderLayout());
     buttonPanel = new JPanel(new GridLayout(9, 2));
 
     init();
@@ -99,8 +97,8 @@ public class ImageView extends JFrame implements ImgView {
   }
 
   @Override
-  public void setController(ImgUIController Controller) {
-    this.reqController = Controller;
+  public void setController(ImgUIController controller) {
+    this.reqController = controller;
   }
 
   private void init() {
@@ -188,10 +186,10 @@ public class ImageView extends JFrame implements ImgView {
     return e -> {
       try {
         if (curImage == null) {
-          throw new NullPointerException();
+          throw new IllegalArgumentException();
         }
         reqController.handleImageAction(action);
-      } catch (NullPointerException ex) {
+      } catch (IllegalArgumentException ex) {
         JOptionPane.showMessageDialog(this, "No Image to process, please load image first.",
             "Error", JOptionPane.ERROR_MESSAGE);
       }
@@ -355,7 +353,7 @@ public class ImageView extends JFrame implements ImgView {
     label.setIcon(scaledImageIcon);
   }
 
-  public void displayImage(BufferedImage image) {
+  private void displayImage(BufferedImage image) {
     if (image != null) {
       showImage(image, reqimgLabel);
       histPanel.repaint();
@@ -418,10 +416,10 @@ public class ImageView extends JFrame implements ImgView {
   }
 
   private void splitView() {
-    String input = JOptionPane.showInputDialog(this, "Enter the split percentage(1-100)");
+    String input = JOptionPane.showInputDialog(this, "Enter the split percentage(0-100)");
     try {
       int percentage = Integer.parseInt(input);
-      if (percentage < 1 || percentage > 100) {
+      if (percentage < 0 || percentage > 100) {
         throw new NumberFormatException();
       }
       reqController.handleImageAction("Split-view", input);
@@ -429,7 +427,7 @@ public class ImageView extends JFrame implements ImgView {
       // showImagePopup(splitView);
     } catch (NumberFormatException e) {
       JOptionPane.showMessageDialog(this,
-          "Invalid input. Please enter an integer between 1 and 100.", "Error",
+          "Invalid input. Please enter an integer between 0 and 100.", "Error",
           JOptionPane.ERROR_MESSAGE);
     }
   }

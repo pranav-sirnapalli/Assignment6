@@ -32,7 +32,7 @@ public class Main {
         scriptController.runScript(args[1]);
       } else if (args[0].equals("-text")) {
         scriptController.runCommand(reader);
-      } else{
+      } else {
         System.out.println("Help MenuXD:"
             + "\n1.To run script:        java -jar <jarFileName>.jar -file <filePath>"
             + "\n2.To run command line:  java -jar <jarFileName>.jar -text"

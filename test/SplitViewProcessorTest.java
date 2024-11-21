@@ -1,4 +1,3 @@
-
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -77,12 +76,11 @@ public class SplitViewProcessorTest {
       }
     }
     //negative
-    assertThrows(IllegalArgumentException.class,()->{
+    assertThrows(IllegalArgumentException.class, () -> {
       model.splitView(originalImage, processedImage, -1);
-    },"Expected exception for illegal argument");
+    }, "Expected exception for illegal argument");
 
   }
-
 
 
   @Test
@@ -96,9 +94,9 @@ public class SplitViewProcessorTest {
       }
     }
     //negative
-    assertThrows(IllegalArgumentException.class,()->{
+    assertThrows(IllegalArgumentException.class, () -> {
       model.splitView(originalImage, processedImage, 101);
-    },"Expected exception for illegal argument");
+    }, "Expected exception for illegal argument");
 
   }
 }
